@@ -18,6 +18,10 @@ class _HomePageState extends State<HomePage> {
   bool more;
   double height, width;
   bool post;
+  // TabController controller = TabController(
+  //   length: 2,
+  //   vsync:
+  // )
   @override
   void initState() {
     post = false;
@@ -455,10 +459,67 @@ class _HomePageState extends State<HomePage> {
                                     fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text(
-                                "Tab for more info...",
+                                "Tap for more info...",
                                 textAlign: TextAlign.center,
                                 style: GoogleFonts.openSans(),
                               )),
+                          DefaultTabController(
+                            length: 2,
+                            child: TabBar(
+                                onTap: (value) {
+                                  value == 1 ? more = false : more = true;
+                                  setState(() {});
+                                },
+                                // controller: controller,
+                                tabs: <Tab>[
+                                  new Tab(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        Icon(
+                                          Icons.photo,
+                                          color: Colors.black,
+                                        ),
+                                        new Icon(
+                                          Icons.videocam,
+                                          color: Colors.black,
+                                        )
+                                      ],
+                                    ),
+                                    // icon:
+                                  ),
+                                  new Tab(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: <Widget>[
+                                        Icon(
+                                          Icons.audiotrack,
+                                          color: Colors.black,
+                                        ),
+                                        new Icon(
+                                          Icons.text_fields,
+                                          color: Colors.black,
+                                        )
+                                      ],
+                                    ),
+                                    // icon:
+                                  ),
+                                  // new Tab(icon: new Icon(Icons.arrow_back)),
+                                ]),
+                          ),
+                          more == true
+                              ? Container(
+                                  height: height,
+                                  width: width,
+                                  color: Colors.amber,
+                                )
+                              : Container(
+                                  height: height,
+                                  width: width,
+                                  color: Colors.yellow,
+                                ),
                         ],
                       ),
                     ),
