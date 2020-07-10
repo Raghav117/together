@@ -13,6 +13,7 @@ import 'package:firebase_database/firebase_database.dart';
 
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:together/screens/intrest.dart';
 
 class PhoneRegistration extends StatefulWidget {
   final bool forgot;
@@ -342,15 +343,13 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   StorageReference storageReference;
                   String url = "";
                   await getCurrentUser();
-
-                  if (file != null)
-                    storageReference = FirebaseStorage.instance
-                        .ref()
-                        .child("images/${user.phoneNumber + name}");
                   final databaseReference =
                       FirebaseDatabase.instance.reference();
                   try {
                     if (file != null) {
+                      storageReference = FirebaseStorage.instance
+                          .ref()
+                          .child("images/${user.phoneNumber + name}");
                       final StorageUploadTask uploadTask =
                           storageReference.putFile(File(file.path));
                       final StorageTaskSnapshot downloadUrl =
@@ -358,36 +357,45 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       url = (await downloadUrl.ref.getDownloadURL());
                     }
                     if (forgot == false) {
-                      await databaseReference.child(user.phoneNumber).set({
-                        'name': name,
-                        'dob': _date.toString(),
-                        'gender': _gender[igender],
-                        'password': password,
-                        'purl': url
-                        // 'email': r.email
-                      });
+                      try {
+                        await databaseReference.child(user.phoneNumber).set({
+                          'name': name,
+                          'dob': _date.toString(),
+                          'gender': _gender[igender],
+                          'password': password,
+                          'purl': url
+                          // 'email': r.email
+                        });
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => IntrestScreen()));
+                      } catch (e) {
+                        print(e.toString());
+                      }
                     } else {
                       await databaseReference
                           .child(user.phoneNumber)
                           .update({'password': password});
+
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => HomePage()));
                     }
                     print("URL is $url");
                     print("completed");
-
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                    Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => HomePage()));
+                    ;
                   } catch (e) {
                     loading = false;
                     setState(() {});
                     print("roornaw " + e.toString());
                   }
 
-                  // Navigator.of(context).pop();
-                  // Navigator.of(context).pop();
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => HomePage()));
+                  // // Navigator.of(context).pop();
+                  // // Navigator.of(context).pop();
+                  // Navigator.of(context).push(
+                  //     MaterialPageRoute(builder: (context) => HomePage()));
                 }
               },
               // child: InkWell(

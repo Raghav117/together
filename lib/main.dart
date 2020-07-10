@@ -10,7 +10,7 @@ void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     title: "Together",
-    home: HomePage(),
+    home: MyApp(),
   ));
 }
 
@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
   login() async {
     await _auth.currentUser().then((user) {
       if (user != null) {
-        print("user");
+        print(user.phoneNumber);
         final databaseReference = FirebaseDatabase.instance.reference();
         try {
           databaseReference

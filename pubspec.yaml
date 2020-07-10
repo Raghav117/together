@@ -24,7 +24,9 @@ dependencies:
   flutter:
     sdk: flutter
   intl_phone_number_input: 
+  location: ^3.0.0
   flutter_datetime_picker: 
+  dart_geohash: ^1.0.2
 
   gradient_text: 
   google_fonts: 

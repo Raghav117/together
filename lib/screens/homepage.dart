@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:dart_geohash/dart_geohash.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,6 +8,8 @@ import 'package:together/design/styles.dart';
 import 'package:scroll_bottom_navigation_bar/scroll_bottom_navigation_bar.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:location/location.dart';
+// import ;
 
 class HomePage extends StatefulWidget {
   @override
@@ -17,6 +20,12 @@ class _HomePageState extends State<HomePage> {
   final controller = ScrollController();
   bool more;
   double height, width;
+  GeoHasher _geoHasher;
+  var code;
+  Location location = new Location();
+  bool _serviceEnabled;
+  PermissionStatus _permissionGranted;
+  LocationData _locationData;
   bool post;
   // TabController controller = TabController(
   //   length: 2,
@@ -24,9 +33,45 @@ class _HomePageState extends State<HomePage> {
   // )
   @override
   void initState() {
+    _geoHasher = new GeoHasher();
     post = false;
     more = false;
     super.initState();
+    func();
+    // code =
+  }
+
+  func() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+    if (_locationData != null) {
+      print(_locationData.longitude);
+      print(_locationData.latitude);
+      print(_geoHasher.neighbors(_geoHasher.encode(
+          _locationData.longitude, _locationData.latitude,
+          precision: 5)));
+      // code = _geoHasher.encode(_locationData.longitude, _locationData.latitude,
+      //     precision: 8);
+      // print(code);
+      // // code = _geoHasher.neighbors();
+      // print(code);
+    }
+    // if(_locationData)
   }
 
   final items = <BottomNavigationBarItem>[
@@ -72,6 +117,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
+    func();
     return Scaffold(
       bottomNavigationBar: ScrollBottomNavigationBar(
         controller: controller,
