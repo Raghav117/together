@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_geohash/dart_geohash.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -9,6 +11,7 @@ import 'package:scroll_bottom_navigation_bar/scroll_bottom_navigation_bar.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart';
+import 'package:together/modals/models.dart';
 // import ;
 
 class HomePage extends StatefulWidget {
@@ -20,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   final controller = ScrollController();
   bool more;
   double height, width;
+  Own own = Own();
   GeoHasher _geoHasher;
   var code;
   Location location = new Location();
@@ -27,18 +31,15 @@ class _HomePageState extends State<HomePage> {
   PermissionStatus _permissionGranted;
   LocationData _locationData;
   bool post;
-  // TabController controller = TabController(
-  //   length: 2,
-  //   vsync:
-  // )
+  final firestoreInstance = Firestore.instance;
   @override
   void initState() {
+    // print(double.parse("21.251"));
     _geoHasher = new GeoHasher();
     post = false;
     more = false;
     super.initState();
     func();
-    // code =
   }
 
   func() async {
@@ -60,18 +61,84 @@ class _HomePageState extends State<HomePage> {
 
     _locationData = await location.getLocation();
     if (_locationData != null) {
-      print(_locationData.longitude);
-      print(_locationData.latitude);
-      print(_geoHasher.neighbors(_geoHasher.encode(
-          _locationData.longitude, _locationData.latitude,
-          precision: 5)));
-      // code = _geoHasher.encode(_locationData.longitude, _locationData.latitude,
-      //     precision: 8);
-      // print(code);
-      // // code = _geoHasher.neighbors();
-      // print(code);
+      Map<String, String> m = Map();
+      m["longitude"] = _locationData.longitude.toString();
+      m["latitude"] = _locationData.latitude.toString();
+      removeRealLocation(m);
+      // updateLocation(m);
+      // updateRealLocation(m);
     }
-    // if(_locationData)
+  }
+
+  //!---------------------------------------- GeoCoder ------------------------------------------------------------
+
+  giveGeocode(Map m, int precision) {
+    var x = _geoHasher.neighbors(_geoHasher.encode(
+        double.parse(m["longitude"]), double.parse(m["latitude"]),
+        precision: precision));
+    List<String> points = List();
+    x.forEach((key, value) {
+      points.add(value);
+    });
+    return points;
+  }
+
+  //!---------------------------------------- Update Firestore Location ------------------------------------------------------------
+
+  updateLocation(Map m) {
+    firestoreInstance
+        .collection(own.phone)
+        .document("location")
+        .get()
+        .then((value) => {
+              if (value.exists)
+                {
+                  removeRealLocation(value.data),
+                  firestoreInstance
+                      .collection(own.phone)
+                      .document('location')
+                      .updateData(m)
+                }
+              else
+                {
+                  firestoreInstance
+                      .collection(own.phone)
+                      .document("location")
+                      .setData(m)
+                }
+            });
+  }
+
+  //!---------------------------------------- Remove Real Location Firebase------------------------------------------------------------
+
+  removeRealLocation(Map m) {
+    List list = giveGeocode(m, 5);
+    int i = 0;
+    print(list);
+    var x;
+    list.forEach((element) {
+      x = FirebaseDatabase.instance.reference();
+      for (i = 0; i != element.length; ++i) {
+        x = x.child(element[i]);
+      }
+      x = x.child("mobile").child(own.phone).remove();
+    });
+  }
+
+  //!---------------------------------------- Update Real Location Firebase------------------------------------------------------------
+
+  updateRealLocation(Map m) {
+    List list = giveGeocode(m, 5);
+    int i = 0;
+    print(list);
+    var x;
+    list.forEach((element) {
+      x = FirebaseDatabase.instance.reference();
+      for (i = 0; i != element.length; ++i) {
+        x = x.child(element[i]);
+      }
+      x = x.child("mobile").child(own.phone).set("");
+    });
   }
 
   final items = <BottomNavigationBarItem>[
@@ -117,7 +184,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
-    func();
     return Scaffold(
       bottomNavigationBar: ScrollBottomNavigationBar(
         controller: controller,

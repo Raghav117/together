@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,9 @@ import 'package:together/design/styles.dart';
 import 'package:together/screens/intrest.dart';
 import 'package:together/screens/registration.dart';
 import 'package:together/screens/homepage.dart';
+
+import 'modals/details.dart';
+import 'modals/models.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -20,7 +24,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // final FirebaseUser user;
   bool pass;
   bool registered;
   FirebaseAuth _auth;
@@ -28,6 +31,7 @@ class _MyAppState extends State<MyApp> {
   String errorUser;
   bool loading;
   String errorPassword;
+  final firestoreInstance = Firestore.instance;
   @override
   void initState() {
     pass = false;
@@ -45,17 +49,18 @@ class _MyAppState extends State<MyApp> {
   login() async {
     await _auth.currentUser().then((user) {
       if (user != null) {
-        print(user.phoneNumber);
-        final databaseReference = FirebaseDatabase.instance.reference();
+        // final databaseReference = FirebaseDatabase.instance.reference();
         try {
-          databaseReference
-              .child(user.phoneNumber)
-              .once()
-              .then((DataSnapshot snapshot) {
-            if (snapshot.value != null) {
-              // Map<dynamic, dynamic> m = snapshot.value;
-              // Record r = Record.fromaMap(m, user.phoneNumber);
-              // r.show();
+          firestoreInstance
+              .collection(user.phoneNumber)
+              .document("profile")
+              .get()
+              .then((value) {
+            if (value.exists) {
+              Map<dynamic, dynamic> m = value.data;
+              Own r = Own.fromaMap(m, user.phoneNumber.toString());
+              print(user.phoneNumber);
+              r.show();
               Navigator.of(context).pop();
               Navigator.push(
                   context,
@@ -69,29 +74,60 @@ class _MyAppState extends State<MyApp> {
               });
             }
           });
+          //     .getDocuments()
+          //     .then((value) {
+          //   if (value.documents.length != 0) {
+          //     print(value.documents.length);
+
+          //     Navigator.of(context).pop();
+          //     Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (BuildContext context) => HomePage(),
+          //         ));
+          //   } else {
+          //     _auth.signOut();
+          //     setState(() {
+          //       loading = false;
+          //     });
+          //   }
+          // });
+          // databaseReference
+          //     .child(user.phoneNumber)
+          //     .once()
+          //     .then((DataSnapshot snapshot) {
+          //   if (snapshot.value != null) {
+          //     Map<dynamic, dynamic> m = snapshot.value;
+          //     Own r = Own.fromaMap(m, user.phoneNumber.toString());
+          //     print(user.phoneNumber);
+          //     r.show();
+          //     Navigator.of(context).pop();
+          //     Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (BuildContext context) => HomePage(),
+          //         ));
+          //   } else {
+          //     _auth.signOut();
+          //     setState(() {
+          //       loading = false;
+          //     });
+          //   }
+          // });
         } catch (e) {
           setState(() {
             loading = false;
             print("Not USer");
-            // error = e;
           });
         }
       } else {
         setState(() {
-          print("dfasdf");
+          print("No");
 
           loading = false;
         });
       }
     });
-  }
-
-  Future checkUser() async {
-    final databaseReference = FirebaseDatabase.instance.reference();
-    print(num);
-    await databaseReference.child(num).once().then((value) =>
-        value.value == null ? registered = false : registered = true);
-    return registered;
   }
 
   String num;
@@ -100,19 +136,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Colors.white,
-      //   title: Text(
-      //     "Together",
-      //     style: appName,
-      //   ),
-      //   centerTitle: true,
-      // ),
       body: loading == false
           ? SingleChildScrollView(
               child: Column(
-                // crossAxisAlignment: CrossAxisAlignment.start,
-                // mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   SizedBox(
                     height: 60,
@@ -131,35 +157,15 @@ class _MyAppState extends State<MyApp> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
                     child: Container(
-                      // decoration: BoxDecoration(
-                      //     gradient: LinearGradient(
-                      //         begin: Alignment.topLeft,
-                      //         end: Alignment.bottomRight,
-                      //         colors: [Colors.orange, Colors.white, Colors.green])),
                       child: new TextField(
                         onChanged: (value) => num = value,
                         onSubmitted: (value) => num = value,
-
-                        // textAlign: TextAlign.center,
-
                         decoration: new InputDecoration(
                             counterText: 'User ID / Mobile No.',
-                            // hintStyle: appName,
                             labelText: 'User ID / Mobile No.',
                             hintText: 'User ID / Mobile No.',
                             errorText: errorUser,
-                            prefixIcon: Icon(Icons.supervisor_account)
-                            // border: OutlineInputBorder()
-                            // border: new OutlineInputBorder(
-                            // borderRadius: const BorderRadius.all(
-                            //   // const Radius.circular(0.0),
-                            // ),
-                            // borderSide: new BorderSide(
-                            //   color: Colors.black,
-                            //   width: 1.0,
-                            // ),
-                            // ),
-                            ),
+                            prefixIcon: Icon(Icons.supervisor_account)),
                       ),
                     ),
                   ),
@@ -167,23 +173,14 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 25.0, vertical: 10),
                     child: Container(
-                      // decoration: BoxDecoration(
-                      //     gradient: LinearGradient(
-                      //         begin: Alignment.topLeft,
-                      //         end: Alignment.bottomRight,
-                      //         colors: [Colors.orange, Colors.white, Colors.green])),
                       child: new TextField(
-                        // textAlign: TextAlign.center,
                         onChanged: (value) => password = value,
                         onSubmitted: (value) => password = value,
                         obscureText: !pass ? true : false,
                         decoration: new InputDecoration(
                             counterText: "Password",
                             errorText: errorPassword,
-                            // prefixText: "passeord",
-                            // counterText: "passwored",
                             labelText: "Password",
-                            // hintStyle: appName,
                             hintText: 'Password',
                             prefixIcon: Icon(Icons.security),
                             suffix: IconButton(
@@ -196,19 +193,7 @@ class _MyAppState extends State<MyApp> {
                                   setState(() {
                                     pass = !pass;
                                   });
-                                })
-
-                            // border: OutlineInputBorder()
-                            // border: new OutlineInputBorder(
-                            // borderRadius: const BorderRadius.all(
-                            //   // const Radius.circular(0.0),
-                            // ),
-                            // borderSide: new BorderSide(
-                            //   color: Colors.black,
-                            //   width: 1.0,
-                            // ),
-                            // ),
-                            ),
+                                })),
                       ),
                     ),
                   ),
@@ -228,26 +213,29 @@ class _MyAppState extends State<MyApp> {
                               setState(() {
                                 loading = true;
                               });
-                              if (!await checkUser()) {
+                              if (!await checkUser(num)) {
                                 errorUser = "Not Registered";
                                 setState(() {
                                   loading = false;
                                 });
                               } else {
-                                final databaseRefrence =
-                                    FirebaseDatabase.instance.reference();
-                                databaseRefrence
-                                    .child(num)
-                                    .once()
+                                firestoreInstance
+                                    .collection(num)
+                                    .document("profile")
+                                    .get()
                                     .then((value) {
-                                  print(value.value);
-                                  print(value.value["password"]);
-                                  if (value.value["password"] != password) {
+                                  print(value.data);
+                                  print(value.data["password"]);
+                                  if (value.data["password"] != password) {
                                     errorPassword = "Wrong Password";
                                     setState(() {
                                       loading = false;
                                     });
                                   } else {
+                                    Map<dynamic, dynamic> m = value.data;
+                                    Own r = Own.fromaMap(m, num);
+                                    print(num);
+                                    r.show();
                                     Navigator.pop(context);
                                     Navigator.of(context)
                                         .push(MaterialPageRoute(
@@ -289,12 +277,7 @@ class _MyAppState extends State<MyApp> {
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => PhoneRegistration(
                                           forgot: true,
-                                        )
-                                    // PhoneRegistration(
-                                    //       forgot: true,
-                                    //     )
-
-                                    ));
+                                        )));
                               },
                               child: Text("Forgot Password")),
                         ),

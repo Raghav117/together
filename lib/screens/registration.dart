@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:together/modals/details.dart';
+import 'package:together/modals/models.dart';
 import 'package:together/screens/homepage.dart';
 // import 'lib/screens/homepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,6 +27,8 @@ class PhoneRegistration extends StatefulWidget {
 }
 
 class _PhoneRegistrationState extends State<PhoneRegistration> {
+  final firestoreInstance = Firestore.instance;
+
   PhoneNumber mobileNo;
   final bool forgot;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -57,17 +62,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
   _PhoneRegistrationState(this.forgot);
 
   Future getCurrentUser() async {
-    print("yeaj");
     user = await _auth.currentUser();
     print(user);
-  }
-
-  Future checkUser() async {
-    final databaseReference = FirebaseDatabase.instance.reference();
-    print(mobileNo);
-    await databaseReference.child(mobileNo.toString()).once().then((value) =>
-        value.value == null ? registered = false : registered = true);
-    return registered;
   }
 
   Future registerUser(String mobile, BuildContext context) async {
@@ -75,30 +71,21 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
       _auth.verifyPhoneNumber(
           phoneNumber: mobile,
           timeout: Duration(minutes: 2),
-          verificationCompleted: (cridential) {
-            print("Cefdad" + cridential.toString());
-          },
+          verificationCompleted: (cridential) {},
           verificationFailed: (exception) {
             setState(() {
               loading = false;
             });
-            print("exceptopm" + exception.message);
           },
           codeSent: (String verificationId, [int forceSendingToken]) {
             this.verificationId = verificationId;
-            // print(code);
             setState(() {
               loading = false;
               page = 1;
             });
           },
-          codeAutoRetrievalTimeout: (timeout) {
-            print("timeout");
-          });
+          codeAutoRetrievalTimeout: (timeout) {});
     } catch (e) {
-      setState(() {
-        loading == false;
-      });
       print(e.toString());
     }
   }
@@ -136,8 +123,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
     password = "";
     confirmPassword = "";
     super.initState();
-    // errorNumber;
-    // mobileNo = "";
     page = 0;
     igender = 0;
     pass = false;
@@ -145,14 +130,12 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
   }
 
   Future<bool> _willPopCallback() async {
-    // bool result = false;
     if (page == 3 && forgot == false) {
       page = 2;
       setState(() {});
     } else {
       return true;
     }
-    // print(result);
     return false; // return true if the route to be popped
   }
 
@@ -328,6 +311,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: InkWell(
               onTap: () async {
+                Own own = Own();
+
                 if (confirmPassword != password) {
                   print("eroro 1");
                   setState(() {
@@ -343,8 +328,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   StorageReference storageReference;
                   String url = "";
                   await getCurrentUser();
-                  final databaseReference =
-                      FirebaseDatabase.instance.reference();
+                  // final databaseReference =
+                  //     FirebaseDatabase.instance.reference();
                   try {
                     if (file != null) {
                       storageReference = FirebaseStorage.instance
@@ -355,17 +340,31 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       final StorageTaskSnapshot downloadUrl =
                           (await uploadTask.onComplete);
                       url = (await downloadUrl.ref.getDownloadURL());
+                      own.imageUrl = url;
                     }
                     if (forgot == false) {
                       try {
-                        await databaseReference.child(user.phoneNumber).set({
+                        await firestoreInstance
+                            .collection(user.phoneNumber)
+                            .document("profile")
+                            .setData({
                           'name': name,
                           'dob': _date.toString(),
                           'gender': _gender[igender],
                           'password': password,
                           'purl': url
-                          // 'email': r.email
                         });
+                        // await databaseReference.child(user.phoneNumber).set({
+                        //   'name': name,
+                        //   'dob': _date.toString(),
+                        //   'gender': _gender[igender],
+                        //   'password': password,
+                        //   'purl': url
+                        //   // 'email': r.email
+                        // });
+                        own.name = name;
+                        own.dob = _date.toString();
+                        own.gender = _gender[igender];
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
                         Navigator.of(context).push(MaterialPageRoute(
@@ -374,22 +373,29 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                         print(e.toString());
                       }
                     } else {
-                      await databaseReference
-                          .child(user.phoneNumber)
-                          .update({'password': password});
+                      await firestoreInstance
+                          .collection(user.phoneNumber)
+                          .document("profile")
+                          .updateData({'password': password});
+
+                      await firestoreInstance
+                          .collection(user.phoneNumber)
+                          .document("profile")
+                          .get()
+                          .then((value) {
+                        Map<dynamic, dynamic> m = value.data;
+                        own = Own.fromaMap(m, user.phoneNumber);
+                        own.show();
+                      });
 
                       Navigator.of(context).pop();
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                           MaterialPageRoute(builder: (context) => HomePage()));
                     }
-                    print("URL is $url");
-                    print("completed");
-                    ;
                   } catch (e) {
                     loading = false;
                     setState(() {});
-                    print("roornaw " + e.toString());
                   }
 
                   // // Navigator.of(context).pop();
@@ -469,6 +475,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                               onPressed: () async {
                                 Navigator.of(context).pop();
 
+                                // ignore: invalid_use_of_visible_for_testing_member
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.gallery);
                                 setState(() {});
@@ -479,6 +486,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                               onPressed: () async {
                                 Navigator.of(context).pop();
 
+                                // ignore: invalid_use_of_visible_for_testing_member
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.camera);
                                 setState(() {});
@@ -971,7 +979,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   loading = true;
                 });
                 if (forgot == false) {
-                  registered = await checkUser();
+                  registered = await checkUser(mobileNo.toString());
                   if (registered == false) {
                     await registerUser(mobileNo.toString(), context);
                   } else {
@@ -980,7 +988,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                     setState(() {});
                   }
                 } else {
-                  registered = await checkUser();
+                  registered = await checkUser(mobileNo.toString());
                   if (registered == false) {
                     setState(() {
                       errorNumber = "Not Registered";

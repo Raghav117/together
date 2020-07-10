@@ -1,11 +1,13 @@
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 import 'package:together/design/styles.dart';
+import 'package:together/modals/models.dart';
 import 'package:together/screens/homepage.dart';
 
 class IntrestScreen extends StatefulWidget {
@@ -19,6 +21,8 @@ class _IntrestScreenState extends State<IntrestScreen> {
   double height, width;
   FirebaseUser user;
   bool loading;
+  final firestoreInstance = Firestore.instance;
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   int choose;
@@ -170,14 +174,14 @@ class _IntrestScreenState extends State<IntrestScreen> {
                                 }
                               }
                               try {
-                                final databaseReference =
-                                    FirebaseDatabase.instance.reference();
-                                await databaseReference
-                                    .child(user.phoneNumber)
-                                    .update({
+                                await firestoreInstance
+                                    .collection(user.phoneNumber)
+                                    .document("profile")
+                                    .updateData({
                                   "hobies": hobies,
                                   // 'email': r.email
                                 });
+                                Own().hobies = hobies;
                                 loading = false;
                                 setState(() {});
                                 // Navigator.of(context).pop();
