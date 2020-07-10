@@ -7,6 +7,7 @@ class Own {
   String hobies;
   String dob;
   String phone;
+  Map m;
 
   static final Own _own = Own._internal();
 

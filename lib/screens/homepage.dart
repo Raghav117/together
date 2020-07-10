@@ -1,17 +1,21 @@
+import 'dart:io';
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:file_picker/file_picker.dart';
 import 'package:together/design/styles.dart';
 import 'package:scroll_bottom_navigation_bar/scroll_bottom_navigation_bar.dart';
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart';
 import 'package:together/modals/models.dart';
+import 'package:video_player/video_player.dart';
+import 'package:flutter_absolute_path/flutter_absolute_path.dart';
 // import ;
 
 class HomePage extends StatefulWidget {
@@ -32,6 +36,10 @@ class _HomePageState extends State<HomePage> {
   LocationData _locationData;
   bool post;
   final firestoreInstance = Firestore.instance;
+
+  String text;
+
+  bool postLoading;
   @override
   void initState() {
     // print(double.parse("21.251"));
@@ -64,9 +72,9 @@ class _HomePageState extends State<HomePage> {
       Map<String, String> m = Map();
       m["longitude"] = _locationData.longitude.toString();
       m["latitude"] = _locationData.latitude.toString();
-      removeRealLocation(m);
-      // updateLocation(m);
-      // updateRealLocation(m);
+      own.m = m;
+      updateLocation(m);
+      updateRealLocation(m);
     }
   }
 
@@ -138,6 +146,108 @@ class _HomePageState extends State<HomePage> {
         x = x.child(element[i]);
       }
       x = x.child("mobile").child(own.phone).set("");
+    });
+  }
+
+  //!---------------------------------------- Post Upload ------------------------------------------------------------
+
+  postUpload() async {
+    StorageReference storageReference;
+    String vUrl = "";
+    List<File> f = List();
+    List<String> pUrl = List();
+    if (file != null) {
+      storageReference = FirebaseStorage.instance
+          .ref()
+          .child('videos/${own.phone + own.name}}');
+      StorageUploadTask uploadTask = storageReference.putFile(File(file.path));
+      StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
+      vUrl = await downloadUrl.ref.getDownloadURL();
+
+      print('File Uploaded');
+      storageReference.getDownloadURL().then((fileURL) {
+        vUrl = fileURL;
+      });
+      file = null;
+      setState(() {});
+
+      await _videoPlayerController.dispose();
+      // setState(() {});
+    }
+
+    if (images.length != 0) {
+      List<File> files = [];
+      for (Asset asset in images) {
+        final filePath =
+            await FlutterAbsolutePath.getAbsolutePath(asset.identifier);
+        files.add(File(filePath));
+      }
+      for (var f in files) {
+        try {
+          storageReference =
+              FirebaseStorage.instance.ref().child("images/${f.path}");
+          StorageUploadTask uploadTask = storageReference.putFile(File(f.path));
+          StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
+          pUrl.add(await downloadUrl.ref.getDownloadURL());
+          print('File Uploaded');
+        } catch (e) {
+          print(e);
+        } // storageReference.getDownloadURL().then((fileURL) {
+        //   pUrl.add(fileURL);
+        // });
+      }
+    }
+    String path;
+    await firestoreInstance
+        .collection(own.phone)
+        .document("timeline")
+        .collection("main")
+        .add({
+      "text": text,
+      "purl": pUrl,
+      "vurl": vUrl,
+    }).then((value) {
+      print(value.path);
+      path = value.path;
+    });
+
+    images.clear();
+    file = null;
+    postLoading = false;
+    print('Successfull');
+    setState(() {});
+    postToLocation(path);
+  }
+
+  //!---------------------------------------- Post for location ------------------------------------------------------------
+
+  postToLocation(String path) {
+    print(own.m);
+
+    List list = giveGeocode(own.m, 5);
+    int i = 0;
+    print(list);
+    var x;
+
+    list.forEach((element) {
+      x = FirebaseDatabase.instance.reference();
+      for (i = 0; i != element.length; ++i) {
+        x = x.child(element[i]);
+      }
+
+      x.child("mobile").once().then((value) async {
+        value.value.forEach((key, value) async {
+          if (key != own.phone) {
+            await firestoreInstance
+                .collection(key)
+                .document("timeline")
+                .collection(own.gender)
+                .document("path")
+                .setData({path: "path"});
+          }
+        });
+      });
+      print("Completed");
     });
   }
 
@@ -642,6 +752,74 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  //! ---------------------------------------------------  Post --------------------------------------------
+
+  List<Asset> images = List<Asset>();
+  String _error = 'No Error Dectected';
+  Widget buildGridView() {
+    return GridView.count(
+      crossAxisCount: 2,
+      children: List.generate(images.length, (index) {
+        Asset asset = images[index];
+        return Stack(
+          children: <Widget>[
+            AssetThumb(
+              asset: asset,
+              width: 300,
+              height: 300,
+            ),
+            IconButton(
+                icon: Icon(
+                  Icons.delete,
+                  color: Colors.lightBlueAccent,
+                ),
+                onPressed: () {
+                  images.removeAt(index);
+                  setState(() {});
+                })
+          ],
+        );
+      }),
+    );
+  }
+
+  Future<void> loadAssets() async {
+    List<Asset> resultList = List<Asset>();
+    String error = 'No Error Dectected';
+    print(error);
+
+    try {
+      resultList = await MultiImagePicker.pickImages(
+        maxImages: 3,
+        enableCamera: true,
+        selectedAssets: images,
+        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
+        materialOptions: MaterialOptions(
+          actionBarColor: "#abcdef",
+          actionBarTitle: "Example App",
+          allViewTitle: "All Photos",
+          useDetailsView: false,
+          selectCircleStrokeColor: "#000000",
+        ),
+      );
+    } on Exception catch (e) {
+      error = e.toString();
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      images = resultList;
+      _error = error;
+    });
+  }
+
+  File file;
+  VideoPlayerController _videoPlayerController;
+
   Container buildPost(BuildContext context) {
     return Container(
       color: Colors.white,
@@ -667,7 +845,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     FlatButton(
-                      onPressed: post == true ? () {} : null,
+                      onPressed: post == true
+                          ? () async {
+                              await postUpload();
+                            }
+                          : null,
                       child: Text(
                         "Post    ",
                         style: TextStyle(
@@ -760,41 +942,109 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              Flexible(
-                child: ListView(
-                  children: <Widget>[
-                    Container(
-                      child: TextField(
-                        textInputAction: TextInputAction.newline,
-                        keyboardType: TextInputType.multiline,
-                        maxLines: null,
-                        minLines: 1,
-                        decoration: InputDecoration(
-                            hintText: "   What do you want to share ???",
-                            disabledBorder: InputBorder.none,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none),
-                        onChanged: (value) {
-                          print("object");
-                          if (value.length == 0)
-                            setState(() {
-                              post = false;
-                            });
+              Container(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    textInputAction: TextInputAction.newline,
+                    keyboardType: TextInputType.multiline,
+                    maxLines: null,
+                    minLines: 1,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                    decoration: InputDecoration(
+                        hintText: "What do you want to share ???",
+                        disabledBorder: InputBorder.none,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none),
+                    onChanged: (value) {
+                      text = value;
+                      print("object");
+                      if (value.length == 0)
+                        setState(() {
+                          post = false;
+                        });
 
-                          if (value.length != 0) if (post == false)
-                            setState(() {
-                              post = true;
-                            });
-                        },
-                        onSubmitted: (value) {},
-                      ),
-                    ),
-                  ],
+                      if (value.length != 0) if (post == false)
+                        setState(() {
+                          post = true;
+                        });
+                    },
+                    onSubmitted: (value) {
+                      text = value;
+                    },
+                  ),
                 ),
               ),
+              // Container(
+              //   child: TextField(
+              //     textInputAction: TextInputAction.newline,
+              //     keyboardType: TextInputType.multiline,
+              //     maxLines: null,
+              //     minLines: 1,
+              //     decoration: InputDecoration(
+              //         hintText: "   What do you want to share ???",
+              //         disabledBorder: InputBorder.none,
+              //         border: InputBorder.none,
+              //         enabledBorder: InputBorder.none),
+              //     onChanged: (value) {
+              //       print("object");
+              //       if (value.length == 0)
+              //         setState(() {
+              //           post = false;
+              //         });
+
+              //       if (value.length != 0) if (post == false)
+              //         setState(() {
+              //           post = true;
+              //         });
+              //     },
+              //     onSubmitted: (value) {},
+              //   ),
+              // ),
+              images.length != 0
+                  ? Expanded(
+                      child: buildGridView(),
+                    )
+                  : Container(),
+              file != null
+                  ? Expanded(
+                      child: ListView.builder(
+                        itemCount: 1,
+                        itemBuilder: (BuildContext context, int index) {
+                          return Stack(
+                            children: <Widget>[
+                              AspectRatio(
+                                aspectRatio:
+                                    _videoPlayerController.value.aspectRatio,
+                                child: VideoPlayer(_videoPlayerController),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.delete,
+                                  color: Colors.lightBlueAccent,
+                                ),
+                                onPressed: () async {
+                                  file = null;
+                                  print(file);
+                                  setState(() {});
+                                  _videoPlayerController.dispose();
+                                  setState(() {});
+                                  // setState(() {});
+                                  // setState(() {});
+                                },
+                              )
+                            ],
+                          );
+                        },
+                      ),
+                    )
+                  : SizedBox(),
+              // file!=null? Expanded(
+              //   child: buildGridView(),
+              // ),Containe()
               SizedBox(
                 height: 50,
-              ),
+              )
             ],
           ),
           Align(
@@ -803,7 +1053,8 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 FlatButton(
-                  onPressed: () {},
+                  onPressed:
+                      images.length < 3 && file == null ? loadAssets : null,
                   child: Row(
                     children: <Widget>[
                       Icon(Icons.photo_album),
@@ -815,7 +1066,28 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 FlatButton(
-                  onPressed: () {},
+                  onPressed: images.length == 0
+                      ? () async {
+                          if (file != null) {
+                            await _videoPlayerController.dispose();
+                            // file = null;
+                            setState(() {});
+                          }
+                          file = await FilePicker.getFile(
+                              allowedExtensions: ["mp4", "mkv"],
+                              type: FileType.custom);
+                          if (file != null) {
+                            print("File length is " +
+                                file.lengthSync().toString());
+                            _videoPlayerController =
+                                VideoPlayerController.file(file);
+                            await _videoPlayerController.initialize();
+                            await _videoPlayerController.play();
+                            await _videoPlayerController.setLooping(true);
+                            setState(() {});
+                          }
+                        }
+                      : null,
                   child: Row(
                     children: <Widget>[
                       Icon(Icons.missed_video_call),
@@ -827,7 +1099,29 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 FlatButton(
-                  onPressed: () {},
+                  onPressed: images.length == 0
+                      ? () async {
+                          if (file != null) {
+                            await _videoPlayerController.dispose();
+                            // file = null;
+                            setState(() {});
+                          }
+                          file = await FilePicker.getFile(
+                              allowedExtensions: ["mp3"],
+                              // file.
+                              type: FileType.custom);
+                          if (file != null) {
+                            print("File length is " +
+                                file.lengthSync().toString());
+                            _videoPlayerController =
+                                VideoPlayerController.file(file);
+                            await _videoPlayerController.initialize();
+                            await _videoPlayerController.play();
+                            await _videoPlayerController.setLooping(true);
+                            setState(() {});
+                          }
+                        }
+                      : null,
                   child: Row(
                     children: <Widget>[
                       Icon(Icons.audiotrack),
