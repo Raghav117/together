@@ -10,6 +10,12 @@ TextStyle appMobile =
 var gradient = LinearGradient(
   colors: [Color(0xFF000080).withOpacity(0.8), Colors.lightBlueAccent],
 );
+var reverseGradient = LinearGradient(
+  colors: [
+    Colors.lightBlueAccent,
+    Color(0xFF000080).withOpacity(0.8),
+  ],
+);
 
 // GradientText appName = GradientText(
 //   'Together',

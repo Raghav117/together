@@ -35,3 +35,34 @@ class Own {
 
   Own._internal();
 }
+
+class Profile {
+  String text;
+  String vurl;
+  List purl;
+  String date;
+
+  // static final Profile _profile = Profile._internal();
+
+  // factory Profile() {
+  //   return _profile;
+  // }
+
+  Profile.fromaMap(value) {
+    this.text = value['text'];
+    this.purl = value['purl'];
+    this.vurl = value['vurl'];
+    this.date = value['date'];
+  }
+
+  show() {
+    // print(gender);
+    // print(dob);
+    // print(name);
+    // print(imageUrl);
+    // print(hobies);
+    // print(phone);
+  }
+
+  // Profile._internal();
+}

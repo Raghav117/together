@@ -182,6 +182,7 @@ class _IntrestScreenState extends State<IntrestScreen> {
                                   // 'email': r.email
                                 });
                                 Own().hobies = hobies;
+                                Own().phone = user.phoneNumber.toString();
                                 loading = false;
                                 setState(() {});
                                 // Navigator.of(context).pop();

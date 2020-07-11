@@ -27,6 +27,7 @@ dependencies:
   location: ^3.0.0
   flutter_datetime_picker: 
   file_picker: ^1.12.0
+  chewie: ^0.9.10
   multi_image_picker: ^4.6.7
   dart_geohash: ^1.0.2
   video_player: ^0.10.11+2
@@ -36,8 +37,9 @@ dependencies:
 
   gradient_text: 
   google_fonts: 
+  bottom_navy_bar: ^5.4.0
   auto_size_text: 
-  scroll_bottom_navigation_bar: 
+  # scroll_bottom_navigation_bar: 
   flutter_parsed_text: 
   sliding_up_panel: 
   firebase_core: 

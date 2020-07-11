@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -8,15 +9,21 @@ import 'package:flutter/material.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:chewie/chewie.dart';
 import 'package:together/design/styles.dart';
-import 'package:scroll_bottom_navigation_bar/scroll_bottom_navigation_bar.dart';
+import 'package:together/screens/buildProfile.dart';
+import 'buildTimeline.dart';
+
 import 'package:flutter_parsed_text/flutter_parsed_text.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:location/location.dart';
+import '../screens/buildPost.dart';
 import 'package:together/modals/models.dart';
+import 'package:together/screens/intrest.dart';
+import 'package:together/screens/video.dart';
 import 'package:video_player/video_player.dart';
+import '../modals/details.dart';
 import 'package:flutter_absolute_path/flutter_absolute_path.dart';
-// import ;
 
 class HomePage extends StatefulWidget {
   @override
@@ -24,29 +31,24 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final controller = ScrollController();
-  bool more;
+  PageController _pageController;
   double height, width;
   Own own = Own();
-  GeoHasher _geoHasher;
-  var code;
   Location location = new Location();
   bool _serviceEnabled;
   PermissionStatus _permissionGranted;
   LocationData _locationData;
-  bool post;
   final firestoreInstance = Firestore.instance;
 
-  String text;
+  int index;
 
-  bool postLoading;
   @override
   void initState() {
-    // print(double.parse("21.251"));
-    _geoHasher = new GeoHasher();
-    post = false;
-    more = false;
+    _pageController = PageController();
+
+    index = 0;
     super.initState();
+
     func();
   }
 
@@ -74,27 +76,13 @@ class _HomePageState extends State<HomePage> {
       m["latitude"] = _locationData.latitude.toString();
       own.m = m;
       updateLocation(m);
-      updateRealLocation(m);
     }
-  }
-
-  //!---------------------------------------- GeoCoder ------------------------------------------------------------
-
-  giveGeocode(Map m, int precision) {
-    var x = _geoHasher.neighbors(_geoHasher.encode(
-        double.parse(m["longitude"]), double.parse(m["latitude"]),
-        precision: precision));
-    List<String> points = List();
-    x.forEach((key, value) {
-      points.add(value);
-    });
-    return points;
   }
 
   //!---------------------------------------- Update Firestore Location ------------------------------------------------------------
 
-  updateLocation(Map m) {
-    firestoreInstance
+  updateLocation(Map m) async {
+    await firestoreInstance
         .collection(own.phone)
         .document("location")
         .get()
@@ -114,7 +102,11 @@ class _HomePageState extends State<HomePage> {
                       .document("location")
                       .setData(m)
                 }
-            });
+            })
+        .then((value) {
+      print(value);
+      updateRealLocation(m);
+    });
   }
 
   //!---------------------------------------- Remove Real Location Firebase------------------------------------------------------------
@@ -149,140 +141,31 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  //!---------------------------------------- Post Upload ------------------------------------------------------------
-
-  postUpload() async {
-    StorageReference storageReference;
-    String vUrl = "";
-    List<File> f = List();
-    List<String> pUrl = List();
-    if (file != null) {
-      storageReference = FirebaseStorage.instance
-          .ref()
-          .child('videos/${own.phone + own.name}}');
-      StorageUploadTask uploadTask = storageReference.putFile(File(file.path));
-      StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
-      vUrl = await downloadUrl.ref.getDownloadURL();
-
-      print('File Uploaded');
-      storageReference.getDownloadURL().then((fileURL) {
-        vUrl = fileURL;
-      });
-      file = null;
-      setState(() {});
-
-      await _videoPlayerController.dispose();
-      // setState(() {});
-    }
-
-    if (images.length != 0) {
-      List<File> files = [];
-      for (Asset asset in images) {
-        final filePath =
-            await FlutterAbsolutePath.getAbsolutePath(asset.identifier);
-        files.add(File(filePath));
-      }
-      for (var f in files) {
-        try {
-          storageReference =
-              FirebaseStorage.instance.ref().child("images/${f.path}");
-          StorageUploadTask uploadTask = storageReference.putFile(File(f.path));
-          StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
-          pUrl.add(await downloadUrl.ref.getDownloadURL());
-          print('File Uploaded');
-        } catch (e) {
-          print(e);
-        } // storageReference.getDownloadURL().then((fileURL) {
-        //   pUrl.add(fileURL);
-        // });
-      }
-    }
-    String path;
-    await firestoreInstance
-        .collection(own.phone)
-        .document("timeline")
-        .collection("main")
-        .add({
-      "text": text,
-      "purl": pUrl,
-      "vurl": vUrl,
-    }).then((value) {
-      print(value.path);
-      path = value.path;
-    });
-
-    images.clear();
-    file = null;
-    postLoading = false;
-    print('Successfull');
-    setState(() {});
-    postToLocation(path);
-  }
-
-  //!---------------------------------------- Post for location ------------------------------------------------------------
-
-  postToLocation(String path) {
-    print(own.m);
-
-    List list = giveGeocode(own.m, 5);
-    int i = 0;
-    print(list);
-    var x;
-
-    list.forEach((element) {
-      x = FirebaseDatabase.instance.reference();
-      for (i = 0; i != element.length; ++i) {
-        x = x.child(element[i]);
-      }
-
-      x.child("mobile").once().then((value) async {
-        value.value.forEach((key, value) async {
-          if (key != own.phone) {
-            await firestoreInstance
-                .collection(key)
-                .document("timeline")
-                .collection(own.gender)
-                .document("path")
-                .setData({path: "path"});
-          }
-        });
-      });
-      print("Completed");
-    });
-  }
-
-  final items = <BottomNavigationBarItem>[
-    BottomNavigationBarItem(
-      activeIcon: Icon(Icons.home, color: Colors.blue),
+  final items = [
+    BottomNavyBarItem(
+      activeColor: Colors.lightBlueAccent,
       icon: Icon(
         Icons.home,
         color: Colors.grey,
       ),
       title: Text("Timeline"),
     ),
-    BottomNavigationBarItem(
-        activeIcon: Icon(Icons.message, color: Colors.blue),
+    BottomNavyBarItem(
+        activeColor: Colors.lightBlueAccent,
         icon: Icon(
           Icons.message,
           color: Colors.grey,
         ),
         title: Text("Messsage")),
-    BottomNavigationBarItem(
-        activeIcon: Icon(Icons.add, color: Colors.blue),
+    BottomNavyBarItem(
+        activeColor: Colors.lightBlueAccent,
         icon: Icon(
           Icons.add,
           color: Colors.grey,
         ),
         title: Text("Post")),
-    // BottomNavigationBarItem(
-    //     activeIcon: Icon(Icons.notifications, color: Colors.blue),
-    //     icon: Icon(
-    //       Icons.notifications,
-    //       color: Colors.grey,
-    //     ),
-    //     title: Text("Notification")),
-    BottomNavigationBarItem(
-        activeIcon: Icon(Icons.supervisor_account, color: Colors.blue),
+    BottomNavyBarItem(
+        activeColor: Colors.lightBlueAccent,
         icon: Icon(
           Icons.supervisor_account,
           color: Colors.grey,
@@ -295,1098 +178,29 @@ class _HomePageState extends State<HomePage> {
     height = MediaQuery.of(context).size.height;
     width = MediaQuery.of(context).size.width;
     return Scaffold(
-      bottomNavigationBar: ScrollBottomNavigationBar(
-        controller: controller,
-        items: items,
-      ),
-      backgroundColor: Colors.white.withOpacity(0.90),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {},
-      //   child: Icon(Icons.assignment_turned_in),
-      // ),
-      body: SafeArea(
-        child: Snap(
-          controller: controller.bottomNavigationBar,
-          child: ValueListenableBuilder<int>(
-              valueListenable: controller.bottomNavigationBar.tabNotifier,
-              builder: (context, value, child) {
-                print(value);
-                if (value == 0) return buildTimeline();
-                if (value == 2) return buildPost(context);
-                if (value == 3)
-                  return SingleChildScrollView(
-                    child: Container(
-                      color: Colors.white,
-                      child: Column(
-                        children: <Widget>[
-                          Container(
-                            decoration:
-                                BoxDecoration(color: Colors.white, boxShadow: [
-                              BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  spreadRadius: 0.5,
-                                  offset: Offset(2.0, 0.5))
-                            ]),
-                            height: height / 16,
-                            child: Center(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Text(
-                                    "  Profile",
-                                    style: appName,
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.settings),
-                                    onPressed: () {},
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(18.0),
-                            child: InkWell(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return Scaffold(
-                                      backgroundColor: Colors.black,
-                                      body: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: <Widget>[
-                                          // SizedBox(
-                                          //   height: 50,
-                                          // ),
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceEvenly,
-                                            children: <Widget>[
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons
-                                                      .photo_size_select_actual,
-                                                  color: Colors.white,
-                                                ),
-                                                onPressed: () {},
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.delete_outline,
-                                                  color: Colors.white,
-                                                ),
-                                                onPressed: () {},
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  Icons.camera_alt,
-                                                  color: Colors.white,
-                                                ),
-                                                onPressed: () {},
-                                              ),
-                                            ],
-                                          ),
-                                          // Row(
-                                          //   mainAxisAlignment:
-                                          //       MainAxisAlignment.spaceEvenly,
-                                          //   children: <Widget>[
-                                          //     Container(
-                                          //       height: 40,
-                                          //       width: 120,
-                                          //       decoration: BoxDecoration(
-                                          //           borderRadius:
-                                          //               BorderRadius.circular(20.0),
-                                          //           gradient: gradient),
-                                          //       child: Center(
-                                          //         child: Text(
-                                          //           "Remove Photo",
-                                          //           style: TextStyle(
-                                          //               fontSize: 15.0,
-                                          //               fontWeight: FontWeight.bold,
-                                          //               color: Colors.white),
-                                          //         ),
-                                          //       ),
-                                          //     ),
-                                          //     Container(
-                                          //       height: 40,
-                                          //       width: 120,
-                                          //       decoration: BoxDecoration(
-                                          //           borderRadius:
-                                          //               BorderRadius.circular(20.0),
-                                          //           gradient: gradient),
-                                          //       child: Center(
-                                          //         child: Text(
-                                          //           "From Camera",
-                                          //           style: TextStyle(
-                                          //               fontWeight: FontWeight.bold,
-                                          //               color: Colors.white),
-                                          //         ),
-                                          //       ),
-                                          //     ),
-                                          //     Container(
-                                          //       height: 40,
-                                          //       width: 120,
-                                          //       decoration: BoxDecoration(
-                                          //           borderRadius:
-                                          //               BorderRadius.circular(20.0),
-                                          //           gradient: gradient),
-                                          //       child: Center(
-                                          //         child: Text(
-                                          //           "From Gallery",
-                                          //           style: TextStyle(
-                                          //               fontWeight: FontWeight.bold,
-                                          //               color: Colors.white),
-                                          //         ),
-                                          //       ),
-                                          //     ),
-                                          //   ],
-                                          // ),
-                                          SizedBox(
-                                            height: 100,
-                                          ),
-                                          Image.network(
-                                            "https://firebasestorage.googleapis.com/v0/b/together-98788.appspot.com/o/images%2F%2B917078808081Raghv?alt=media&token=df6f85bb-7515-414d-9b5c-a9e712dabec0",
-                                            fit: BoxFit.contain,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                              child: Column(
-                                children: <Widget>[
-                                  Container(
-                                    height: height / 5,
-                                    width: height / 5,
-                                    decoration: BoxDecoration(
-                                        borderRadius:
-                                            BorderRadius.circular(20.0)),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      child: Image.asset(
-                                        "assets/profile.jpg",
-                                        fit: BoxFit.fill,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: <Widget>[
-                              Column(
-                                children: <Widget>[
-                                  Text(
-                                    "Following",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text("135")
-                                ],
-                              ),
-                              Column(
-                                children: <Widget>[
-                                  Text(
-                                    "Followers",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text("828")
-                                ],
-                              ),
-                              Column(
-                                children: <Widget>[
-                                  Text(
-                                    "Posts",
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text("92")
-                                ],
-                              ),
-                            ],
-                          ),
-                          ListTile(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20)),
-                                      content: Container(
-                                        child: Column(
-                                          children: <Widget>[
-                                            ListTile(
-                                                onTap: () {},
-                                                leading: IconButton(
-                                                  icon: Icon(
-                                                    Icons.person,
-                                                    color:
-                                                        Colors.lightBlueAccent,
-                                                  ),
-                                                  onPressed: () {},
-                                                ),
-                                                // isThreeLine: true,
-                                                // isThreeLine: true,
-                                                trailing: Icon(Icons.edit),
-                                                title: Text(
-                                                  "Name",
-                                                  style: GoogleFonts.openSans(),
-                                                ),
-                                                subtitle: Text(
-                                                  "Raghav Garg",
-                                                  style: GoogleFonts.openSans(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                )),
-                                            Divider(),
-                                            ListTile(
-                                                onTap: () {},
-                                                leading: IconButton(
-                                                  icon: Icon(
-                                                    Icons.info,
-                                                    color:
-                                                        Colors.lightBlueAccent,
-                                                  ),
-                                                  onPressed: () {},
-                                                ),
-                                                // isThreeLine: true,
-                                                trailing: Icon(Icons.edit),
-                                                title: Text(
-                                                  "About",
-                                                  style: GoogleFonts.openSans(),
-                                                ),
-                                                subtitle: Text(
-                                                  "",
-                                                  style: GoogleFonts.openSans(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                )),
-                                            Divider(),
-                                            ListTile(
-                                                onTap: () {},
-                                                leading: Icon(
-                                                  Icons.phone,
-                                                  color: Colors.lightBlueAccent,
-                                                ),
-                                                // onPressed: () {},
-                                                // ),
-                                                // isThreeLine: true,
-                                                trailing: Icon(Icons.edit),
-                                                title: Text(
-                                                  "Mobile No",
-                                                  style: GoogleFonts.openSans(),
-                                                ),
-                                                subtitle: Text(
-                                                  "+919012220988",
-                                                  style: GoogleFonts.openSans(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                )),
-                                            Divider(),
-                                            ListTile(
-                                                onTap: () {},
-                                                leading: Icon(
-                                                  Icons.calendar_today,
-                                                  color: Colors.lightBlueAccent,
-                                                ),
-                                                // onPressed: () {},
-                                                // ),
-                                                // isThreeLine: true,
-                                                trailing: Icon(Icons.edit),
-                                                title: Text(
-                                                  "DOB",
-                                                  style: GoogleFonts.openSans(),
-                                                ),
-                                                subtitle: Text(
-                                                  "06/12/1999",
-                                                  style: GoogleFonts.openSans(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                )),
-                                            Divider(),
-                                            ListTile(
-                                                onTap: () {},
-                                                leading: Icon(
-                                                  Icons.group_work,
-                                                  color: Colors.lightBlueAccent,
-                                                ),
-                                                // onPressed: () {},
-                                                // ),
-                                                // isThreeLine: true,
-                                                trailing: Icon(Icons.edit),
-                                                title: Text(
-                                                  "Gender",
-                                                  style: GoogleFonts.openSans(),
-                                                ),
-                                                subtitle: Text(
-                                                  "Female",
-                                                  style: GoogleFonts.openSans(
-                                                      fontWeight:
-                                                          FontWeight.bold),
-                                                )),
-                                            Divider(),
-                                            ListTile(
-                                              onTap: () {},
-                                              leading: Icon(
-                                                Icons.insert_emoticon,
-                                                color: Colors.lightBlueAccent,
-                                              ),
-                                              isThreeLine: true,
-                                              // onPressed: () {},
-                                              // ),
-                                              // isThreeLine: true,
-                                              trailing: Icon(Icons.edit),
-                                              title: Text(
-                                                "Intrests",
-                                                style: GoogleFonts.openSans(),
-                                              ),
-                                              subtitle: Text(
-                                                  "Tap here to see Intrestes"),
-                                              // subtitle: Text(
-                                              //   "Female",
-                                              //   style: GoogleFonts.openSans(
-                                              //       fontWeight: FontWeight.bold),
-                                              // )
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                              // leading: IconButton(
-                              //   icon: Icon(
-                              //     Icons.person,
-                              //     color: Colors.lightBlueAccent,
-                              //   ),
-                              //   onPressed: () {},
-                              // ),
-                              // isThreeLine: true,
-                              // isThreeLine: true,
-                              // trailing: Icon(Icons.edit),
-                              title: Text(
-                                "Raghav Garg",
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.openSans(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                "Tap for more info...",
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.openSans(),
-                              )),
-                          DefaultTabController(
-                            length: 2,
-                            child: TabBar(
-                                onTap: (value) {
-                                  value == 1 ? more = false : more = true;
-                                  setState(() {});
-                                },
-                                // controller: controller,
-                                tabs: <Tab>[
-                                  new Tab(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: <Widget>[
-                                        Icon(
-                                          Icons.photo,
-                                          color: Colors.black,
-                                        ),
-                                        new Icon(
-                                          Icons.videocam,
-                                          color: Colors.black,
-                                        )
-                                      ],
-                                    ),
-                                    // icon:
-                                  ),
-                                  new Tab(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: <Widget>[
-                                        Icon(
-                                          Icons.audiotrack,
-                                          color: Colors.black,
-                                        ),
-                                        new Icon(
-                                          Icons.text_fields,
-                                          color: Colors.black,
-                                        )
-                                      ],
-                                    ),
-                                    // icon:
-                                  ),
-                                  // new Tab(icon: new Icon(Icons.arrow_back)),
-                                ]),
-                          ),
-                          more == true
-                              ? Container(
-                                  height: height,
-                                  width: width,
-                                  color: Colors.amber,
-                                )
-                              : Container(
-                                  height: height,
-                                  width: width,
-                                  color: Colors.yellow,
-                                ),
-                        ],
-                      ),
-                    ),
-                  );
-              }),
-        ),
-      ),
-    );
-  }
-
-  //! ---------------------------------------------------  Post --------------------------------------------
-
-  List<Asset> images = List<Asset>();
-  String _error = 'No Error Dectected';
-  Widget buildGridView() {
-    return GridView.count(
-      crossAxisCount: 2,
-      children: List.generate(images.length, (index) {
-        Asset asset = images[index];
-        return Stack(
-          children: <Widget>[
-            AssetThumb(
-              asset: asset,
-              width: 300,
-              height: 300,
-            ),
-            IconButton(
-                icon: Icon(
-                  Icons.delete,
-                  color: Colors.lightBlueAccent,
-                ),
-                onPressed: () {
-                  images.removeAt(index);
-                  setState(() {});
-                })
-          ],
-        );
-      }),
-    );
-  }
-
-  Future<void> loadAssets() async {
-    List<Asset> resultList = List<Asset>();
-    String error = 'No Error Dectected';
-    print(error);
-
-    try {
-      resultList = await MultiImagePicker.pickImages(
-        maxImages: 3,
-        enableCamera: true,
-        selectedAssets: images,
-        cupertinoOptions: CupertinoOptions(takePhotoIcon: "chat"),
-        materialOptions: MaterialOptions(
-          actionBarColor: "#abcdef",
-          actionBarTitle: "Example App",
-          allViewTitle: "All Photos",
-          useDetailsView: false,
-          selectCircleStrokeColor: "#000000",
-        ),
-      );
-    } on Exception catch (e) {
-      error = e.toString();
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      images = resultList;
-      _error = error;
-    });
-  }
-
-  File file;
-  VideoPlayerController _videoPlayerController;
-
-  Container buildPost(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Stack(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
+        bottomNavigationBar: BottomNavyBar(
+            selectedIndex: index,
+            showElevation: true,
+            onItemSelected: (index) => setState(() {
+                  this.index = index;
+                  print(index);
+                  _pageController.jumpToPage(index);
+                }),
+            items: items),
+        backgroundColor: Colors.white.withOpacity(0.90),
+        body: SizedBox.expand(
+            child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() => this.index = index);
+                },
+                children: <Widget>[
+              BuildTimeline(),
               Container(
-                decoration: BoxDecoration(color: Colors.white, boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 0.5,
-                      offset: Offset(2.0, 0.5))
-                ]),
-                height: height / 16,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Center(
-                      child: Text(
-                        "  Together",
-                        style: appName,
-                      ),
-                    ),
-                    FlatButton(
-                      onPressed: post == true
-                          ? () async {
-                              await postUpload();
-                            }
-                          : null,
-                      child: Text(
-                        "Post    ",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: post == false ? Colors.black : Colors.blue),
-                      ),
-                    )
-                  ],
-                ),
+                color: Colors.blue,
               ),
-              Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Row(
-                      children: <Widget>[
-                        Container(
-                          height: 70,
-                          width: 70,
-                          decoration: BoxDecoration(shape: BoxShape.circle),
-                          child: ClipOval(
-                            child: Image.asset(
-                              "assets/profile.jpg",
-                              fit: BoxFit.fill,
-                            ),
-                          ),
-                        ),
-                        Column(
-                          children: <Widget>[
-                            Text(
-                              "Raghav PAgea",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(20)),
-                                        content: Container(
-                                          height: width / 2,
-                                          child: Column(
-                                            children: <Widget>[
-                                              FlatButton(
-                                                child: Text("Everyone"),
-                                                onPressed: () {},
-                                              ),
-                                              FlatButton(
-                                                child: Text("Supporters"),
-                                                onPressed: () {},
-                                              ),
-                                              FlatButton(
-                                                child:
-                                                    Text("Only Share with..."),
-                                                onPressed: () {},
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                          width: 1, color: Colors.black)),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Row(
-                                      children: <Widget>[
-                                        Text("Everyone "),
-                                        Icon(Icons.keyboard_arrow_down)
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          ],
-                        )
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    textInputAction: TextInputAction.newline,
-                    keyboardType: TextInputType.multiline,
-                    maxLines: null,
-                    minLines: 1,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                    decoration: InputDecoration(
-                        hintText: "What do you want to share ???",
-                        disabledBorder: InputBorder.none,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none),
-                    onChanged: (value) {
-                      text = value;
-                      print("object");
-                      if (value.length == 0)
-                        setState(() {
-                          post = false;
-                        });
-
-                      if (value.length != 0) if (post == false)
-                        setState(() {
-                          post = true;
-                        });
-                    },
-                    onSubmitted: (value) {
-                      text = value;
-                    },
-                  ),
-                ),
-              ),
-              // Container(
-              //   child: TextField(
-              //     textInputAction: TextInputAction.newline,
-              //     keyboardType: TextInputType.multiline,
-              //     maxLines: null,
-              //     minLines: 1,
-              //     decoration: InputDecoration(
-              //         hintText: "   What do you want to share ???",
-              //         disabledBorder: InputBorder.none,
-              //         border: InputBorder.none,
-              //         enabledBorder: InputBorder.none),
-              //     onChanged: (value) {
-              //       print("object");
-              //       if (value.length == 0)
-              //         setState(() {
-              //           post = false;
-              //         });
-
-              //       if (value.length != 0) if (post == false)
-              //         setState(() {
-              //           post = true;
-              //         });
-              //     },
-              //     onSubmitted: (value) {},
-              //   ),
-              // ),
-              images.length != 0
-                  ? Expanded(
-                      child: buildGridView(),
-                    )
-                  : Container(),
-              file != null
-                  ? Expanded(
-                      child: ListView.builder(
-                        itemCount: 1,
-                        itemBuilder: (BuildContext context, int index) {
-                          return Stack(
-                            children: <Widget>[
-                              AspectRatio(
-                                aspectRatio:
-                                    _videoPlayerController.value.aspectRatio,
-                                child: VideoPlayer(_videoPlayerController),
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.delete,
-                                  color: Colors.lightBlueAccent,
-                                ),
-                                onPressed: () async {
-                                  file = null;
-                                  print(file);
-                                  setState(() {});
-                                  _videoPlayerController.dispose();
-                                  setState(() {});
-                                  // setState(() {});
-                                  // setState(() {});
-                                },
-                              )
-                            ],
-                          );
-                        },
-                      ),
-                    )
-                  : SizedBox(),
-              // file!=null? Expanded(
-              //   child: buildGridView(),
-              // ),Containe()
-              SizedBox(
-                height: 50,
-              )
-            ],
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                FlatButton(
-                  onPressed:
-                      images.length < 3 && file == null ? loadAssets : null,
-                  child: Row(
-                    children: <Widget>[
-                      Icon(Icons.photo_album),
-                      Text(
-                        "Photo",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                FlatButton(
-                  onPressed: images.length == 0
-                      ? () async {
-                          if (file != null) {
-                            await _videoPlayerController.dispose();
-                            // file = null;
-                            setState(() {});
-                          }
-                          file = await FilePicker.getFile(
-                              allowedExtensions: ["mp4", "mkv"],
-                              type: FileType.custom);
-                          if (file != null) {
-                            print("File length is " +
-                                file.lengthSync().toString());
-                            _videoPlayerController =
-                                VideoPlayerController.file(file);
-                            await _videoPlayerController.initialize();
-                            await _videoPlayerController.play();
-                            await _videoPlayerController.setLooping(true);
-                            setState(() {});
-                          }
-                        }
-                      : null,
-                  child: Row(
-                    children: <Widget>[
-                      Icon(Icons.missed_video_call),
-                      Text(
-                        "Video",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                FlatButton(
-                  onPressed: images.length == 0
-                      ? () async {
-                          if (file != null) {
-                            await _videoPlayerController.dispose();
-                            // file = null;
-                            setState(() {});
-                          }
-                          file = await FilePicker.getFile(
-                              allowedExtensions: ["mp3"],
-                              // file.
-                              type: FileType.custom);
-                          if (file != null) {
-                            print("File length is " +
-                                file.lengthSync().toString());
-                            _videoPlayerController =
-                                VideoPlayerController.file(file);
-                            await _videoPlayerController.initialize();
-                            await _videoPlayerController.play();
-                            await _videoPlayerController.setLooping(true);
-                            setState(() {});
-                          }
-                        }
-                      : null,
-                  child: Row(
-                    children: <Widget>[
-                      Icon(Icons.audiotrack),
-                      Text(
-                        "Audio",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget buildTimeline() {
-    return Container(
-      child: Column(
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(color: Colors.white, boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0.5,
-                  offset: Offset(2.0, 0.5))
-            ]),
-            height: height / 16,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    "  Together",
-                    style: appName,
-                  ),
-                  Row(
-                    children: <Widget>[
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.search),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.notifications),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Flexible(
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (BuildContext context, int index) {
-                return buildList(width);
-              },
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Padding buildList(double width) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 5.0),
-      child: Container(
-        child: Column(
-          children: <Widget>[
-            Container(
-              height: 60,
-              color: Colors.white,
-              padding: EdgeInsets.only(top: 10),
-              child: Center(
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(shape: BoxShape.circle),
-                      child: ClipOval(
-                        child: Image.asset(
-                          "assets/profile.jpg",
-                          fit: BoxFit.fill,
-                        ),
-                      ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          "   " + "Kashish Dudeja",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Container(
-                          height: 30,
-                          width: width / 1.5,
-                          child:
-                              Text("   " + "dfkjs io fh;siu f;oei u tgasohy"),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        IconButton(
-                          icon: Icon(Icons.keyboard_arrow_down, size: 25),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                  content: Container(
-                                    height: width / 1.5,
-                                    child: Column(
-                                      children: <Widget>[
-                                        FlatButton(
-                                          child: Text("Report..."),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Mute..."),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Turn On Notification"),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Copy Link"),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Save Post"),
-                                          onPressed: () {},
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Container(
-              height: 200,
-              color: Colors.white,
-            ),
-            Container(
-              height: 20,
-              color: Colors.white,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(
-                            Icons.thumb_up,
-                            size: 15,
-                            color: Colors.blue,
-                          ),
-                          Text(
-                            "  356",
-                            style: TextStyle(fontSize: 13),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Text(
-                        "5 comments   ",
-                        style: TextStyle(fontSize: 13),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Divider(
-                height: 1,
-                color: Colors.grey.withOpacity(0.1),
-              ),
-            ),
-            Container(
-              height: 50,
-              color: Colors.white,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.thumb_up, color: Colors.grey, size: 15),
-                          Text("Like", style: TextStyle(fontSize: 10))
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.chrome_reader_mode,
-                              color: Colors.grey, size: 15),
-                          Text("Comments", style: TextStyle(fontSize: 10))
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.share, color: Colors.grey, size: 15),
-                          Text("Share", style: TextStyle(fontSize: 10))
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.check_circle_outline,
-                              color: Colors.grey, size: 15),
-                          Text("WRT", style: TextStyle(fontSize: 10))
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+              BuildPost(),
+              BuildProfile()
+            ])));
   }
 }
