@@ -41,7 +41,6 @@ class Profile {
   String vurl;
   List purl;
   String date;
-
   // static final Profile _profile = Profile._internal();
 
   // factory Profile() {

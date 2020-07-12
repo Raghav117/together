@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
+import 'package:together/screens/buildTimeline.dart';
 import 'package:together/screens/intrest.dart';
 import 'package:together/screens/registration.dart';
 import 'package:together/screens/homepage.dart';

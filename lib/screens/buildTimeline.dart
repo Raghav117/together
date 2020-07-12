@@ -1,12 +1,25 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:together/modals/models.dart';
+import 'package:together/screens/video.dart';
 
 class BuildTimeline extends StatefulWidget {
+  final timeline;
+  final bool homepage;
+
+  const BuildTimeline({Key key, this.timeline, this.homepage})
+      : super(key: key);
   @override
-  _BuildTimelineState createState() => _BuildTimelineState();
+  _BuildTimelineState createState() => _BuildTimelineState(timeline);
 }
 
 class _BuildTimelineState extends State<BuildTimeline> {
+  final List<Profile> timeline;
+
+  _BuildTimelineState(this.timeline);
+
   @override
   void dispose() {
     print("uea");
@@ -17,46 +30,58 @@ class _BuildTimelineState extends State<BuildTimeline> {
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
     double width = MediaQuery.of(context).size.width;
-    return SafeArea(
-      child: Column(
+    return Scaffold(
+      appBar: AppBar(
+        actionsIconTheme: IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: Colors.white,
+        elevation: 0.0,
+        title: Text(
+          widget.homepage == true ? "Together" : "Posts",
+          style: appName,
+        ),
+        centerTitle: widget.homepage == true ? true : false,
+      ),
+      body: Column(
         children: <Widget>[
-          Container(
-            decoration: BoxDecoration(color: Colors.white, boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 0.5,
-                  offset: Offset(2.0, 0.5))
-            ]),
-            height: height / 16,
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    "  Together",
-                    style: appName,
-                  ),
-                  Row(
-                    children: <Widget>[
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.search),
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.notifications),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Container(
+          //   decoration: BoxDecoration(color: Colors.white, boxShadow: [
+          //     BoxShadow(
+          //         color: Colors.black.withOpacity(0.1),
+          //         spreadRadius: 0.5,
+          //         offset: Offset(2.0, 0.5))
+          //   ]),
+          //   height: height / 16,
+          //   child: Center(
+          //     child: Row(
+          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //       children: <Widget>[
+          //         Text(
+          //           "  Together",
+          //           style: appName,
+          //         ),
+          //         Row(
+          //           children: <Widget>[
+          //             IconButton(
+          //               onPressed: () {},
+          //               icon: Icon(Icons.search),
+          //             ),
+          //             IconButton(
+          //               onPressed: () {},
+          //               icon: Icon(Icons.notifications),
+          //             ),
+          //           ],
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // buildList(width, height)
           Flexible(
             child: ListView.builder(
-              itemCount: 10,
+              itemCount: timeline.length,
               itemBuilder: (BuildContext context, int index) {
-                return buildList(width);
+                return buildList(width, height, index);
               },
             ),
           )
@@ -65,15 +90,18 @@ class _BuildTimelineState extends State<BuildTimeline> {
     );
   }
 
-  Padding buildList(double width) {
+  Padding buildList(double width, double height, int i) {
     return Padding(
-      padding: const EdgeInsets.only(top: 5.0),
+      padding: const EdgeInsets.only(top: 20.0),
       child: Container(
+        color: Colors.white,
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
               height: 60,
-              color: Colors.white,
+              // color: Colors.white,
               padding: EdgeInsets.only(top: 10),
               child: Center(
                 child: Row(
@@ -82,9 +110,10 @@ class _BuildTimelineState extends State<BuildTimeline> {
                       height: 50,
                       width: 50,
                       decoration: BoxDecoration(shape: BoxShape.circle),
-                      child: ClipOval(
-                        child: Image.asset(
-                          "assets/profile.jpg",
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5),
+                        child: Image.network(
+                          Own().imageUrl,
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -94,14 +123,13 @@ class _BuildTimelineState extends State<BuildTimeline> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          "   " + "Kashish Dudeja",
+                          "   " + Own().name,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Container(
                           height: 30,
                           width: width / 1.5,
-                          child:
-                              Text("   " + "dfkjs io fh;siu f;oei u tgasohy"),
+                          child: Text("   "),
                         ),
                       ],
                     ),
@@ -154,111 +182,113 @@ class _BuildTimelineState extends State<BuildTimeline> {
                 ),
               ),
             ),
-            Container(
-              height: 200,
-              color: Colors.white,
-            ),
-            Container(
-              height: 20,
-              color: Colors.white,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(
-                            Icons.thumb_up,
-                            size: 15,
-                            color: Colors.blue,
-                          ),
-                          Text(
-                            "  356",
-                            style: TextStyle(fontSize: 13),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(18.0),
+                  child: LimitedBox(
                       child: Text(
-                        "5 comments   ",
-                        style: TextStyle(fontSize: 13),
-                        textAlign: TextAlign.end,
+                    timeline[i].text,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  )),
+                ),
+                timeline[i].purl.length == 1
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            child: Image.network(
+                              "https://images.unsplash.com/photo-1517408191923-f82a669f4ea1?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80",
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      )
+                    : timeline[i].purl.length > 1
+                        ? Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 5.0),
+                            child: Container(
+                                height: height / 1.5,
+                                width: width,
+                                decoration: BoxDecoration(
+                                    // color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20)),
+                                child: Swiper(
+                                  // autoplay: true,
+                                  // duration: 2,
+                                  pagination: SwiperPagination.dots,
+                                  itemBuilder: (context, index) {
+                                    return Image.network(
+                                      timeline[i].purl[index],
+                                      fit: BoxFit.contain,
+                                    );
+                                  },
+                                  itemCount: timeline[i].purl.length,
+                                )))
+                        : Container(),
+                timeline[i].vurl.length > 0
+                    ? VideoEidget(
+                        url: timeline[i].vurl,
+                        aspect: true,
+                      )
+                    : Container(),
+                Container(
+                  // height: 50,
+                  decoration: BoxDecoration(
+                      // color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: FlatButton(
+                          onPressed: () {},
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(Icons.thumb_up,
+                                  color: Colors.grey, size: 15),
+                              // Text("Like", style: TextStyle(fontSize: 10)
+                              // )
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18.0),
-              child: Divider(
-                height: 1,
-                color: Colors.grey.withOpacity(0.1),
-              ),
-            ),
-            Container(
-              height: 50,
-              color: Colors.white,
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.thumb_up, color: Colors.grey, size: 15),
-                          Text("Like", style: TextStyle(fontSize: 10))
-                        ],
+                      Expanded(
+                        child: FlatButton(
+                          onPressed: () {},
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(Icons.chrome_reader_mode,
+                                  color: Colors.grey, size: 15),
+                              // Text("Comments", style: TextStyle(fontSize: 10)
+                              // )
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.chrome_reader_mode,
-                              color: Colors.grey, size: 15),
-                          Text("Comments", style: TextStyle(fontSize: 10))
-                        ],
+                      Expanded(
+                        child: FlatButton(
+                          onPressed: () {},
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(Icons.check_circle_outline,
+                                  color: Colors.grey, size: 15),
+                              // Text("WRT", style: TextStyle(fontSize: 10)
+                              // )
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.share, color: Colors.grey, size: 15),
-                          Text("Share", style: TextStyle(fontSize: 10))
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {},
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Icon(Icons.check_circle_outline,
-                              color: Colors.grey, size: 15),
-                          Text("WRT", style: TextStyle(fontSize: 10))
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                )
+              ],
             ),
           ],
         ),

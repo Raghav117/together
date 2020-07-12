@@ -4,13 +4,7 @@ import 'package:bottom_navy_bar/bottom_navy_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_geohash/dart_geohash.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:chewie/chewie.dart';
-import 'package:together/design/styles.dart';
 import 'package:together/screens/buildProfile.dart';
 import 'buildTimeline.dart';
 
@@ -195,7 +189,10 @@ class _HomePageState extends State<HomePage> {
                   setState(() => this.index = index);
                 },
                 children: <Widget>[
-              BuildTimeline(),
+              // BuildTimeline(),
+              Container(
+                color: Colors.blue,
+              ),
               Container(
                 color: Colors.blue,
               ),
