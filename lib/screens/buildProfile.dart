@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -129,8 +130,8 @@ class _BuildProfileState extends State<BuildProfile> {
                                     SizedBox(
                                       height: 100,
                                     ),
-                                    Image.network(
-                                      own.imageUrl,
+                                    CachedNetworkImage(
+                                      imageUrl: own.imageUrl,
                                       fit: BoxFit.contain,
                                     ),
                                   ],
@@ -148,8 +149,8 @@ class _BuildProfileState extends State<BuildProfile> {
                                   borderRadius: BorderRadius.circular(20.0)),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(20.0),
-                                child: Image.network(
-                                  own.imageUrl,
+                                child: CachedNetworkImage(
+                                  imageUrl: own.imageUrl,
                                   fit: BoxFit.fill,
                                 ),
                               ),
@@ -315,7 +316,7 @@ class _BuildProfileState extends State<BuildProfile> {
                           );
                         },
                         title: Text(
-                          "Raghav Garg",
+                          own.name,
                           textAlign: TextAlign.center,
                           style:
                               GoogleFonts.openSans(fontWeight: FontWeight.bold),
@@ -470,8 +471,8 @@ class _BuildProfileState extends State<BuildProfile> {
                                     borderRadius: BorderRadius.circular(20)),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
-                                  child: Image.network(p.purl[0],
-                                      fit: BoxFit.cover),
+                                  child: CachedNetworkImage(
+                                      imageUrl: p.purl[0], fit: BoxFit.cover),
                                 ),
                               ),
                               p.purl.length > 1
@@ -511,7 +512,7 @@ class _BuildProfileState extends State<BuildProfile> {
                           builder: (context) {
                             return BuildTimeline(
                               timeline: profileuntag,
-                              homepage: true,
+                              homepage: false,
                             );
                           },
                         ));
@@ -573,6 +574,7 @@ class _BuildProfileState extends State<BuildProfile> {
                           builder: (context) {
                             return BuildTimeline(
                               timeline: profileuntag,
+                              homepage: false,
                             );
                           },
                         ));
@@ -623,8 +625,8 @@ class _BuildProfileState extends State<BuildProfile> {
                                     borderRadius: BorderRadius.circular(20)),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
-                                  child: Image.network(p.purl[0],
-                                      fit: BoxFit.cover),
+                                  child: CachedNetworkImage(
+                                      imageUrl: p.purl[0], fit: BoxFit.cover),
                                 ),
                               ),
                               p.purl.length > 1

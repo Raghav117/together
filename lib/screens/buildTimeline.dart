@@ -1,9 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:together/modals/models.dart';
 import 'package:together/screens/video.dart';
+import 'package:cached_video_player/cached_video_player.dart';
 
 class BuildTimeline extends StatefulWidget {
   final timeline;
@@ -17,8 +20,14 @@ class BuildTimeline extends StatefulWidget {
 
 class _BuildTimelineState extends State<BuildTimeline> {
   final List<Profile> timeline;
-
+  List<Profile> homeTimeline;
   _BuildTimelineState(this.timeline);
+
+  @override
+  void initState() {
+    super.initState();
+    homeTimeline = List();
+  }
 
   @override
   void dispose() {
@@ -77,20 +86,59 @@ class _BuildTimelineState extends State<BuildTimeline> {
           //   ),
           // ),
           // buildList(width, height)
-          Flexible(
-            child: ListView.builder(
-              itemCount: timeline.length,
-              itemBuilder: (BuildContext context, int index) {
-                return buildList(width, height, index);
-              },
-            ),
-          )
+
+          widget.homepage == true
+              ? StreamBuilder(
+                  stream: Firestore.instance
+                      .collection(Own().phone)
+                      .document("timeline")
+                      .collection("line")
+                      .getDocuments()
+                      .asStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      print("data");
+                      snapshot.requireData.documents.forEach((element) {
+                        homeTimeline.add(Profile.fromaMap(element));
+                      });
+
+                      return Flexible(
+                        child: ListView.builder(
+                          itemCount: homeTimeline.length,
+                          itemBuilder: (context, index) {
+                            return buildList(
+                                width, height, index, homeTimeline);
+                          },
+                        ),
+                      );
+                      // ListView.builder(
+                      //   itemCount: homeTimeline.length,
+                      //   itemBuilder: (BuildContext context, int index) {
+                      //     return buildList(width, height, index);
+                      //   },
+                      // );
+                    } else {
+                      print("loading");
+                      return Expanded(
+                          child: Center(child: CircularProgressIndicator()));
+                    }
+                  },
+                )
+              : Flexible(
+                  child: ListView.builder(
+                    itemCount: timeline.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return buildList(width, height, index, timeline);
+                    },
+                  ),
+                )
         ],
       ),
     );
   }
 
-  Padding buildList(double width, double height, int i) {
+  Padding buildList(
+      double width, double height, int i, List<Profile> timeline) {
     return Padding(
       padding: const EdgeInsets.only(top: 20.0),
       child: Container(
@@ -112,8 +160,8 @@ class _BuildTimelineState extends State<BuildTimeline> {
                       decoration: BoxDecoration(shape: BoxShape.circle),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(5),
-                        child: Image.network(
-                          Own().imageUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: timeline[i].imageUrl,
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -123,7 +171,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         Text(
-                          "   " + Own().name,
+                          "   " + timeline[i].name,
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Container(
@@ -200,9 +248,41 @@ class _BuildTimelineState extends State<BuildTimeline> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
-                            child: Image.network(
-                              "https://images.unsplash.com/photo-1517408191923-f82a669f4ea1?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80",
-                              fit: BoxFit.contain,
+                            child: InkWell(
+                              onTap: () async {
+                                await Navigator.of(context)
+                                    .push(MaterialPageRoute(
+                                  fullscreenDialog: true,
+                                  builder: (context) {
+                                    return Scaffold(
+                                      backgroundColor: Colors.transparent,
+                                      body: Container(
+                                        child: Center(
+                                          child: CachedNetworkImage(
+                                            imageUrl: timeline[i].purl[0],
+                                            placeholder: (context, url) {
+                                              return Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            },
+                                            fit: BoxFit.contain,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ));
+                              },
+                              child: CachedNetworkImage(
+                                imageUrl: timeline[i].purl[0],
+                                placeholder: (context, url) {
+                                  return Center(
+                                    child: CircularProgressIndicator(),
+                                  );
+                                },
+                                fit: BoxFit.contain,
+                              ),
                             ),
                           ),
                         ),
@@ -218,12 +298,38 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                     // color: Colors.blue.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(20)),
                                 child: Swiper(
+                                  onTap: (index) async {
+                                    await Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                      fullscreenDialog: true,
+                                      builder: (context) {
+                                        return Scaffold(
+                                          backgroundColor: Colors.transparent,
+                                          body: Container(
+                                            child: Center(
+                                              child: CachedNetworkImage(
+                                                imageUrl:
+                                                    timeline[i].purl[index],
+                                                placeholder: (context, url) {
+                                                  return Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                                fit: BoxFit.contain,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ));
+                                  },
                                   // autoplay: true,
                                   // duration: 2,
                                   pagination: SwiperPagination.dots,
                                   itemBuilder: (context, index) {
-                                    return Image.network(
-                                      timeline[i].purl[index],
+                                    return CachedNetworkImage(
+                                      imageUrl: timeline[i].purl[index],
                                       fit: BoxFit.contain,
                                     );
                                   },
@@ -251,8 +357,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             children: <Widget>[
                               Icon(Icons.thumb_up,
                                   color: Colors.grey, size: 15),
-                              // Text("Like", style: TextStyle(fontSize: 10)
-                              // )
+                              Text("123", style: TextStyle(fontSize: 10))
                             ],
                           ),
                         ),
@@ -265,8 +370,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             children: <Widget>[
                               Icon(Icons.chrome_reader_mode,
                                   color: Colors.grey, size: 15),
-                              // Text("Comments", style: TextStyle(fontSize: 10)
-                              // )
+                              Text("235", style: TextStyle(fontSize: 10))
                             ],
                           ),
                         ),
@@ -279,8 +383,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             children: <Widget>[
                               Icon(Icons.check_circle_outline,
                                   color: Colors.grey, size: 15),
-                              // Text("WRT", style: TextStyle(fontSize: 10)
-                              // )
+                              Text("Support", style: TextStyle(fontSize: 10))
                             ],
                           ),
                         ),

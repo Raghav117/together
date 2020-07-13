@@ -41,6 +41,8 @@ class Profile {
   String vurl;
   List purl;
   String date;
+  String name;
+  String imageUrl;
   // static final Profile _profile = Profile._internal();
 
   // factory Profile() {
@@ -52,6 +54,8 @@ class Profile {
     this.purl = value['purl'];
     this.vurl = value['vurl'];
     this.date = value['date'];
+    this.name = value['name'];
+    this.imageUrl = value['imageurl'];
   }
 
   show() {

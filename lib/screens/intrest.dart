@@ -164,41 +164,45 @@ class _IntrestScreenState extends State<IntrestScreen> {
                         child: Padding(
                           padding: EdgeInsets.only(top: 8, bottom: 18),
                           child: InkWell(
-                            onTap: () async {
-                              loading = true;
-                              setState(() {});
-                              String hobies = "";
-                              for (int i = 0; i < 12; ++i) {
-                                if (grid[i] == true) {
-                                  hobies = hobies + "," + gridName[i];
-                                }
-                              }
-                              try {
-                                await firestoreInstance
-                                    .collection(user.phoneNumber)
-                                    .document("profile")
-                                    .updateData({
-                                  "hobies": hobies,
-                                  // 'email': r.email
-                                });
-                                Own().hobies = hobies;
-                                Own().phone = user.phoneNumber.toString();
-                                loading = false;
-                                setState(() {});
-                                // Navigator.of(context).pop();
-                                Navigator.of(context).pop();
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => HomePage()));
-                              } catch (e) {
-                                print(e);
-                              }
-                              // Navigator.pop(context);
-                              // Navigator.push(context, MaterialPageRoute(
-                              //   builder: (context) {
-                              //     return HomePage();
-                              //   },
-                              // ));
-                            },
+                            onTap: choose >= 3
+                                ? () async {
+                                    loading = true;
+                                    setState(() {});
+                                    String hobies = "";
+                                    for (int i = 0; i < 12; ++i) {
+                                      if (grid[i] == true) {
+                                        hobies = hobies + "," + gridName[i];
+                                      }
+                                    }
+                                    try {
+                                      await firestoreInstance
+                                          .collection(user.phoneNumber)
+                                          .document("profile")
+                                          .updateData({
+                                        "hobies": hobies,
+                                        // 'email': r.email
+                                      });
+                                      Own().hobies = hobies;
+                                      Own().phone = user.phoneNumber.toString();
+                                      loading = false;
+                                      setState(() {});
+                                      // Navigator.of(context).pop();
+                                      Navigator.of(context).pop();
+                                      Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  HomePage()));
+                                    } catch (e) {
+                                      print(e);
+                                    }
+                                    // Navigator.pop(context);
+                                    // Navigator.push(context, MaterialPageRoute(
+                                    //   builder: (context) {
+                                    //     return HomePage();
+                                    //   },
+                                    // ));
+                                  }
+                                : null,
                             child: Container(
                               height: 50,
                               width: 120,

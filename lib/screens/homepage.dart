@@ -126,13 +126,14 @@ class _HomePageState extends State<HomePage> {
     int i = 0;
     print(list);
     var x;
-    list.forEach((element) {
-      x = FirebaseDatabase.instance.reference();
-      for (i = 0; i != element.length; ++i) {
-        x = x.child(element[i]);
-      }
-      x = x.child("mobile").child(own.phone).set("");
-    });
+    var element = list[8];
+    // list.forEach((element) {
+    x = FirebaseDatabase.instance.reference();
+    for (i = 0; i != element.length; ++i) {
+      x = x.child(element[i]);
+    }
+    x = x.child("mobile").child(own.phone).set("");
+    // });
   }
 
   final items = [
@@ -189,10 +190,12 @@ class _HomePageState extends State<HomePage> {
                   setState(() => this.index = index);
                 },
                 children: <Widget>[
-              // BuildTimeline(),
-              Container(
-                color: Colors.blue,
+              BuildTimeline(
+                homepage: true,
               ),
+              // Container(
+              //   color: Colors.blue,
+              // ),
               Container(
                 color: Colors.blue,
               ),

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../design/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,7 +21,6 @@ class BuildPost extends StatefulWidget {
 }
 
 class _BuildPostState extends State<BuildPost> {
-  bool post = false;
   String text = "";
   List<Asset> images = List<Asset>();
   Own own;
@@ -86,7 +86,9 @@ class _BuildPostState extends State<BuildPost> {
                               ),
                             ),
                             FlatButton(
-                              onPressed: post == true
+                              onPressed: text.length != 0 ||
+                                      file != null ||
+                                      images.length != 0
                                   ? () async {
                                       await postUpload();
                                     }
@@ -95,9 +97,11 @@ class _BuildPostState extends State<BuildPost> {
                                 "Post    ",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: post == false
-                                        ? Colors.black
-                                        : Colors.blue),
+                                    color: text.length != 0 ||
+                                            file != null ||
+                                            images.length != 0
+                                        ? Colors.blue
+                                        : Colors.black),
                               ),
                             )
                           ],
@@ -112,11 +116,10 @@ class _BuildPostState extends State<BuildPost> {
                                 Container(
                                   height: 70,
                                   width: 70,
-                                  decoration:
-                                      BoxDecoration(shape: BoxShape.circle),
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      "assets/profile.jpg",
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20.0),
+                                    child: CachedNetworkImage(
+                                      imageUrl: own.imageUrl,
                                       fit: BoxFit.fill,
                                     ),
                                   ),
@@ -124,7 +127,7 @@ class _BuildPostState extends State<BuildPost> {
                                 Column(
                                   children: <Widget>[
                                     Text(
-                                      "Raghav PAgea",
+                                      own.name,
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold),
                                     ),
@@ -207,16 +210,12 @@ class _BuildPostState extends State<BuildPost> {
                                 enabledBorder: InputBorder.none),
                             onChanged: (value) {
                               text = value;
-                              print("object");
-                              if (value.length == 0)
-                                setState(() {
-                                  post = false;
-                                });
+                              setState(() {});
 
-                              if (value.length != 0) if (post == false)
-                                setState(() {
-                                  post = true;
-                                });
+                              // if (value.length != 0) if (post == false)
+                              //   setState(() {
+                              //     true;
+                              //   });
                             },
                             onSubmitted: (value) {
                               text = value;
@@ -239,12 +238,12 @@ class _BuildPostState extends State<BuildPost> {
                       //       print("object");
                       //       if (value.length == 0)
                       //         setState(() {
-                      //           post = false;
+                      //           false;
                       //         });
 
                       //       if (value.length != 0) if (post == false)
                       //         setState(() {
-                      //           post = true;
+                      //           true;
                       //         });
                       //     },
                       //     onSubmitted: (value) {},
@@ -307,7 +306,10 @@ class _BuildPostState extends State<BuildPost> {
                       children: <Widget>[
                         FlatButton(
                           onPressed: images.length < 3 && file == null
-                              ? loadAssets
+                              ? () {
+                                  loadAssets();
+                                  setState(() {});
+                                }
                               : null,
                           child: Row(
                             children: <Widget>[
@@ -318,6 +320,7 @@ class _BuildPostState extends State<BuildPost> {
                               ),
                             ],
                           ),
+                          // setState(() {});
                         ),
                         FlatButton(
                           onPressed: images.length == 0
@@ -461,16 +464,19 @@ class _BuildPostState extends State<BuildPost> {
     });
   }
 
+  String vUrl = "";
+  List<String> pUrl = List();
+  String date;
+
   //!---------------------------------------- Post Upload ------------------------------------------------------------
 
   postUpload() async {
     loading = true;
     setState(() {});
     StorageReference storageReference;
-    String vUrl = "";
-    List<String> pUrl = List();
 
     if (file != null) {
+      await _videoPlayerController.pause();
       try {
         storageReference = FirebaseStorage.instance
             .ref()
@@ -515,7 +521,7 @@ class _BuildPostState extends State<BuildPost> {
     String path;
     DateTime dateTime;
     dateTime = DateTime.now();
-    String date = dateTime.day.toString() +
+    date = dateTime.day.toString() +
         "-" +
         dateTime.month.toString() +
         "-" +
@@ -530,9 +536,15 @@ class _BuildPostState extends State<BuildPost> {
       "purl": pUrl,
       "vurl": vUrl,
       "date": date,
+      "imageurl": Own().imageUrl,
+      "name": own.name,
     }).then((value) {
-      print(value.path);
-      path = value.path;
+      path = value.documentID;
+      print(path);
+
+      loading = false;
+      setState(() {});
+      postToLocation(path);
     });
 
     images.clear();
@@ -540,7 +552,7 @@ class _BuildPostState extends State<BuildPost> {
     print('Successfull');
     loading = false;
     setState(() {});
-    postToLocation(path);
+    // postToLocation(path);
   }
 
   //!---------------------------------------- Post for location ------------------------------------------------------------
@@ -565,9 +577,19 @@ class _BuildPostState extends State<BuildPost> {
             await firestoreInstance
                 .collection(key)
                 .document("timeline")
-                .collection(own.gender)
-                .document("path")
-                .setData({path: "path"});
+                .collection("line")
+                .document(path)
+                .setData({
+              "text": text,
+              "purl": pUrl,
+              "vurl": vUrl,
+              "date": date,
+              "imageurl": Own().imageUrl,
+              "name": own.name,
+            }).then((value) {
+              // print(value.path);
+              // path = value.path;
+            }).catchError((onError) => print(onError));
           }
         });
       });
