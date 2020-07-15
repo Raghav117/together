@@ -9,7 +9,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:together/modals/details.dart';
 import 'package:together/modals/models.dart';
 import 'package:together/screens/homepage.dart';
-// import 'lib/screens/homepage.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -94,13 +94,12 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
     print(error);
     switch (error.code) {
       case 'ERROR_INVALID_VERIFICATION_CODE':
-        // FocusScope.of(context).requestFocus(new FocusNode());
         setState(() {
           loading = false;
           errorMessage = 'Invalid Code';
         });
         Navigator.of(context).pop();
-        // smsOTPDialog(context);
+
         break;
       default:
         setState(() {
@@ -136,7 +135,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
     } else {
       return true;
     }
-    return false; // return true if the route to be popped
+    return false;
   }
 
   @override
@@ -149,16 +148,12 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
           appBar: AppBar(
             centerTitle: true,
             backgroundColor: Colors.white,
-            // elevation: ,
             iconTheme: IconThemeData(color: Colors.black, opacity: 0.4),
             title: Text(
               "Together",
               style: appName,
             ),
           ),
-          // body: page != 3
-          //     ? buildProfile(height, width, context)
-          //     : buildPassword(width, height),
           body: loading == false
               ? page == 1
                   ? buildOTP(width)
@@ -177,7 +172,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           Column(
-            // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               SizedBox(height: height / 8),
               forgot == false
@@ -196,31 +190,17 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                 ),
               ),
               Column(
-                // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 25.0, vertical: 10),
                     child: Container(
-                      // decoration: BoxDecoration(
-                      //     gradient: LinearGradient(
-                      //         begin: Alignment.topLeft,
-                      //         end: Alignment.bottomRight,
-                      //         colors: [Colors.orange, Colors.white, Colors.green])),
                       child: new TextField(
-                        // textAlign: TextAlign.center,
                         obscureText: !pass ? true : false,
-
                         onChanged: (value) => password = value,
-                        // autofocus: true,
                         onSubmitted: (value) => password = value,
                         decoration: new InputDecoration(
-                            // counterText: "Password",
-
-                            // prefixText: "passeord",
-                            // counterText: "passwored",
                             labelText: "New Password",
-                            // hintStyle: appName,
                             hintText: 'New Password',
                             errorText: passwordValidation,
                             prefixIcon: Icon(Icons.security),
@@ -234,19 +214,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                                   setState(() {
                                     pass = !pass;
                                   });
-                                })
-
-                            // border: OutlineInputBorder()
-                            // border: new OutlineInputBorder(
-                            // borderRadius: const BorderRadius.all(
-                            //   // const Radius.circular(0.0),
-                            // ),
-                            // borderSide: new BorderSide(
-                            //   color: Colors.black,
-                            //   width: 1.0,
-                            // ),
-                            // ),
-                            ),
+                                })),
                       ),
                     ),
                   ),
@@ -255,25 +223,14 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       horizontal: 25.0,
                     ),
                     child: Container(
-                      // decoration: BoxDecoration(
-                      //     gradient: LinearGradient(
-                      //         begin: Alignment.topLeft,
-                      //         end: Alignment.bottomRight,
-                      //         colors: [Colors.orange, Colors.white, Colors.green])),
                       child: new TextField(
-                        // textAlign: TextAlign.center,
                         obscureText: !cpass ? true : false,
                         onChanged: (value) => confirmPassword = value,
                         onSubmitted: (value) =>
                             confirmPasswordValidation = value,
-                        // autofocus: true,
                         decoration: new InputDecoration(
-                            // counterText: "Confirm Password",
-                            // prefixText: "passeord",
                             errorText: confirmPasswordValidation,
-                            // counterText: "passwored",
                             labelText: "Confirm New Password",
-                            // hintStyle: appName,
                             hintText: 'Confirm New Password',
                             prefixIcon: Icon(Icons.security),
                             suffix: IconButton(
@@ -286,19 +243,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                                   setState(() {
                                     cpass = !cpass;
                                   });
-                                })
-
-                            // border: OutlineInputBorder()
-                            // border: new OutlineInputBorder(
-                            // borderRadius: const BorderRadius.all(
-                            //   // const Radius.circular(0.0),
-                            // ),
-                            // borderSide: new BorderSide(
-                            //   color: Colors.black,
-                            //   width: 1.0,
-                            // ),
-                            // ),
-                            ),
+                                })),
                       ),
                     ),
                   ),
@@ -328,8 +273,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   StorageReference storageReference;
                   String url = "";
                   await getCurrentUser();
-                  // final databaseReference =
-                  //     FirebaseDatabase.instance.reference();
+
                   try {
                     if (file != null) {
                       storageReference = FirebaseStorage.instance
@@ -354,14 +298,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                           'password': password,
                           'purl': url
                         });
-                        // await databaseReference.child(user.phoneNumber).set({
-                        //   'name': name,
-                        //   'dob': _date.toString(),
-                        //   'gender': _gender[igender],
-                        //   'password': password,
-                        //   'purl': url
-                        //   // 'email': r.email
-                        // });
+
                         own.name = name;
                         own.dob = _date.toString();
                         own.gender = _gender[igender];
@@ -397,21 +334,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                     loading = false;
                     setState(() {});
                   }
-
-                  // // Navigator.of(context).pop();
-                  // // Navigator.of(context).pop();
-                  // Navigator.of(context).push(
-                  //     MaterialPageRoute(builder: (context) => HomePage()));
                 }
               },
-              // child: InkWell(
-              //   onTap: () {
-              //     // Navigator.pop();
-              //   Navigator.of(context).pop();
-              //   Navigator.of(context).pop();
-              //   Navigator.of(context)
-              //       .push(MaterialPageRoute(builder: (context) => HomePage()));
-              // },
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -449,8 +373,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
     if (user == null) getCurrentUser();
     return SingleChildScrollView(
       child: Column(
-        // mainAxisAlignment: MainAxisAlignment.center,
-        // crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           SizedBox(
@@ -475,7 +397,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                               onPressed: () async {
                                 Navigator.of(context).pop();
 
-                                // ignore: invalid_use_of_visible_for_testing_member
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.gallery);
                                 setState(() {});
@@ -486,17 +407,11 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                               onPressed: () async {
                                 Navigator.of(context).pop();
 
-                                // ignore: invalid_use_of_visible_for_testing_member
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.camera);
                                 setState(() {});
                               },
                             ),
-                            // FlatButton(
-                            //   child:
-                            //       Text("Only Share with..."),
-                            //   onPressed: () {},
-                            // ),
                           ],
                         ),
                       ),
@@ -540,34 +455,15 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Container(
-                  // decoration: BoxDecoration(
-                  //     gradient: LinearGradient(
-                  //         begin: Alignment.topLeft,
-                  //         end: Alignment.bottomRight,
-                  //         colors: [Colors.orange, Colors.white, Colors.green])),
                   child: new TextField(
                     onChanged: (value) => name = value,
                     onSubmitted: (value) => name = value,
-                    // textAlign: TextAlign.center,
                     autocorrect: true,
                     decoration: new InputDecoration(
-                        // counterText: 'Name',
-                        // hintStyle: appName,
                         labelText: 'Name',
                         hintText: 'Name',
                         errorText: errorNumber,
-                        prefixIcon: Icon(Icons.supervisor_account)
-                        // border: OutlineInputBorder()
-                        // border: new OutlineInputBorder(
-                        // borderRadius: const BorderRadius.all(
-                        //   // const Radius.circular(0.0),
-                        // ),
-                        // borderSide: new BorderSide(
-                        //   color: Colors.black,
-                        //   width: 1.0,
-                        // ),
-                        // ),
-                        ),
+                        prefixIcon: Icon(Icons.supervisor_account)),
                   ),
                 ),
               ),
@@ -585,7 +481,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                         ),
                         Text(
                           "  Gender",
-                          // strutStyle: StrutStyle(),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
@@ -593,9 +488,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       ],
                     ),
                     DropdownButton<String>(
-                      // icon:
-                      // elevation: 20,
-                      // hint: Text("Gendere"),
                       value: _gender[igender],
                       items: _gender.map((String value) {
                         return new DropdownMenuItem<String>(
@@ -633,7 +525,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                               minTime: DateTime(0, 0, 0),
                               maxTime: DateTime.now(),
                               theme: DatePickerTheme(
-                                  // headerColor: Colors.blue,
                                   backgroundColor: Colors.white,
                                   itemStyle: TextStyle(
                                       color: Colors.blue,
@@ -656,18 +547,10 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                              // borderRadius: BorderRadius.circular(20),
                               border: Border(
                                   bottom: BorderSide(
                                       color: Colors.black.withOpacity(0.1),
-                                      width: 1))
-                              // gradient: LinearGradient(
-                              //   colors: [
-                              //     Color(0xFF000080).withOpacity(0.9),
-                              //     Colors.lightBlue
-                              //   ],
-                              // ),
-                              ),
+                                      width: 1))),
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(
@@ -683,7 +566,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: Colors.black,
-                                    // fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
@@ -746,14 +628,12 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
   Widget buildOTP(double width) {
     return SingleChildScrollView(
       child: Column(
-        // crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           Container(
               width: width,
               child: Center(child: Image.asset("assets/otp.png"))),
           Column(
-            // mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text(
                 "OTP Verification",
@@ -782,43 +662,24 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                 child: PinCodeTextField(
                   length: 6,
                   textInputType: TextInputType.number,
-
-                  // obsecureText: false,
-                  // animationType: AnimationType.fade,
                   pinTheme: PinTheme(
                       shape: PinCodeFieldShape.underline,
                       activeColor: Colors.blue,
                       inactiveColor: Colors.black,
-                      selectedColor: Colors.black
-                      // selectedColor: Color(0xFF000080).withOpacity(0.9)
-                      // borderRadius: BorderRadius.circular(20)
-                      // borderRadius: BorderRadius.circular(5),
-                      // fieldHeight: 50,
-                      // fieldWidth: 40,
-                      // activeFillColor: Colors.white,
-                      ),
-                  // animationDuration: Duration(milliseconds: 300),
-                  // backgroundColor: Colors.blue.shade50,
-                  // enableActiveFill: true,
-                  // errorAnimationController: errorController,
-                  // controller: textEditingController,
+                      selectedColor: Colors.black),
                   onCompleted: (v) {
                     otp = v;
-                    // print("Completed");
                   },
                   onChanged: (value) {
                     otp = value;
                   },
-
                   beforeTextPaste: (text) {
                     print("Allowing to paste $text");
-                    //if you return true then it will show the paste confirmation dialog. Otherwise if false, then nothing will happen.
-                    //but you can show anything you want here, like your pop up saying wrong paste format or etc
+
                     return true;
                   },
                 ),
               ),
-              //!  ---------------------------------------------------- To Do ----------------------------------------------------------------------------
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -893,7 +754,6 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
 
   Column buildMobileNumber(double height) {
     return Column(
-      // crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: <Widget>[
         forgot == false
@@ -913,11 +773,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 15.0),
               child: InternationalPhoneNumberInput(
-                // countries: [],
-
                 countrySelectorScrollControlled: true,
-                // keyboardAction: TextInputAction.n,
-
                 onInputChanged: (PhoneNumber number) {
                   mobileNo = number;
                   print(number.phoneNumber);
@@ -935,17 +791,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   print(value);
                 },
                 errorMessage: errorNumber,
-                // hintText: "Mobile Number",
-                inputDecoration: InputDecoration(
-                    // counterText: "Mobile Number",
-                    // hintText: "Mobile Number",
-                    labelText: "Mobile Number"
-                    // counterText: "Mobile Number"
-                    ),
-
-                // ignoreBlank: false,
-                // autoValidate: false,
-                // selectorTextStyle: TextStyle(color: Colors.black),
+                inputDecoration: InputDecoration(labelText: "Mobile Number"),
                 initialValue: number,
                 textFieldController: controller,
                 inputBorder: OutlineInputBorder(),
@@ -998,12 +844,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                     await registerUser(mobileNo.toString(), context);
                   }
                 }
-                // var number = mobileNo.toString().substring(1);
-                // print(number);
+
                 print("Next");
-                // setState(() {
-                //   errorNumber = "Wrong Number";
-                // });
               }
             },
             child: Container(

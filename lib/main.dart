@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
+import 'package:together/screens/buildProfile.dart';
 import 'package:together/screens/buildTimeline.dart';
 import 'package:together/screens/intrest.dart';
 import 'package:together/screens/registration.dart';
@@ -15,7 +16,10 @@ void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     title: "Together",
-    home: MyApp(),
+    // home: MyApp(),
+    home: BuildProfile(
+      phone: "+919012220988",
+    ),
   ));
 }
 
@@ -50,7 +54,6 @@ class _MyAppState extends State<MyApp> {
   login() async {
     await _auth.currentUser().then((user) {
       if (user != null) {
-        // final databaseReference = FirebaseDatabase.instance.reference();
         try {
           firestoreInstance
               .collection(user.phoneNumber)
@@ -75,46 +78,6 @@ class _MyAppState extends State<MyApp> {
               });
             }
           });
-          //     .getDocuments()
-          //     .then((value) {
-          //   if (value.documents.length != 0) {
-          //     print(value.documents.length);
-
-          //     Navigator.of(context).pop();
-          //     Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (BuildContext context) => HomePage(),
-          //         ));
-          //   } else {
-          //     _auth.signOut();
-          //     setState(() {
-          //       loading = false;
-          //     });
-          //   }
-          // });
-          // databaseReference
-          //     .child(user.phoneNumber)
-          //     .once()
-          //     .then((DataSnapshot snapshot) {
-          //   if (snapshot.value != null) {
-          //     Map<dynamic, dynamic> m = snapshot.value;
-          //     Own r = Own.fromaMap(m, user.phoneNumber.toString());
-          //     print(user.phoneNumber);
-          //     r.show();
-          //     Navigator.of(context).pop();
-          //     Navigator.push(
-          //         context,
-          //         MaterialPageRoute(
-          //           builder: (BuildContext context) => HomePage(),
-          //         ));
-          //   } else {
-          //     _auth.signOut();
-          //     setState(() {
-          //       loading = false;
-          //     });
-          //   }
-          // });
         } catch (e) {
           setState(() {
             loading = false;

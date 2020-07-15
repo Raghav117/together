@@ -35,8 +35,7 @@ class _IntrestScreenState extends State<IntrestScreen> {
     fillGrid();
     getCurrentUser();
     for (int i = 0; i < 13; ++i) grid.add(false);
-    // grid.insertAll(13, )
-    // grid.forEach((element) {return false;});
+
     super.initState();
   }
 
@@ -79,13 +78,10 @@ class _IntrestScreenState extends State<IntrestScreen> {
                           colors: [
                         Colors.white,
                         Colors.lightBlueAccent.withOpacity(0.5),
-                        // Colors.blue,
                       ])),
                 ),
                 SafeArea(
                   child: Column(
-                    // mainAxisAlignment: MainAxisAlignment.center,
-                    // crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
                       SizedBox(
                         height: height / 18,
@@ -120,7 +116,6 @@ class _IntrestScreenState extends State<IntrestScreen> {
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3),
                         itemBuilder: (context, index) {
-                          // double x =
                           return Padding(
                             padding: EdgeInsets.all(
                                 2 + Random().nextInt(20).toDouble()),
@@ -143,10 +138,7 @@ class _IntrestScreenState extends State<IntrestScreen> {
                                         fontWeight: FontWeight.bold),
                                   ),
                                 ),
-                                // height: 20,
-                                // width: 60,
                                 decoration: BoxDecoration(
-                                    // shape: BoxShape.circle,
                                     gradient:
                                         grid[index] == true ? gradient : null,
                                     borderRadius: BorderRadius.circular(40),
@@ -157,7 +149,6 @@ class _IntrestScreenState extends State<IntrestScreen> {
                             ),
                           );
                         },
-                        // gridDelegate: SilverGridDelegateWithFixedCrossAxisCount(),
                       )),
                       Align(
                         alignment: Alignment.bottomRight,
@@ -180,13 +171,12 @@ class _IntrestScreenState extends State<IntrestScreen> {
                                           .document("profile")
                                           .updateData({
                                         "hobies": hobies,
-                                        // 'email': r.email
                                       });
                                       Own().hobies = hobies;
                                       Own().phone = user.phoneNumber.toString();
                                       loading = false;
                                       setState(() {});
-                                      // Navigator.of(context).pop();
+
                                       Navigator.of(context).pop();
                                       Navigator.of(context).push(
                                           MaterialPageRoute(
@@ -195,12 +185,6 @@ class _IntrestScreenState extends State<IntrestScreen> {
                                     } catch (e) {
                                       print(e);
                                     }
-                                    // Navigator.pop(context);
-                                    // Navigator.push(context, MaterialPageRoute(
-                                    //   builder: (context) {
-                                    //     return HomePage();
-                                    //   },
-                                    // ));
                                   }
                                 : null,
                             child: Container(

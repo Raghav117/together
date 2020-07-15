@@ -1,5 +1,32 @@
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
+class User {
+  String gender;
+  String imageUrl;
+  String name;
+  String hobies;
+  String dob;
+  String phone;
+  Map m;
+  show() {
+    print(gender);
+    print(dob);
+    print(name);
+    print(imageUrl);
+    print(hobies);
+    print(phone);
+  }
+
+  User.fromaMap(value, no) {
+    this.gender = value['gender'];
+    this.dob = value['dob'];
+    this.name = value['name'];
+    this.hobies = value['hobies'];
+    this.phone = no.toString();
+    this.imageUrl = value['purl'];
+  }
+}
+
 class Own {
   String gender;
   String imageUrl;
@@ -7,6 +34,7 @@ class Own {
   String hobies;
   String dob;
   String phone;
+
   Map m;
 
   static final Own _own = Own._internal();
@@ -43,11 +71,6 @@ class Profile {
   String date;
   String name;
   String imageUrl;
-  // static final Profile _profile = Profile._internal();
-
-  // factory Profile() {
-  //   return _profile;
-  // }
 
   Profile.fromaMap(value) {
     this.text = value['text'];
@@ -58,14 +81,5 @@ class Profile {
     this.imageUrl = value['imageurl'];
   }
 
-  show() {
-    // print(gender);
-    // print(dob);
-    // print(name);
-    // print(imageUrl);
-    // print(hobies);
-    // print(phone);
-  }
-
-  // Profile._internal();
+  show() {}
 }

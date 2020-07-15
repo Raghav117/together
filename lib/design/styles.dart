@@ -16,17 +16,3 @@ var reverseGradient = LinearGradient(
     Color(0xFF000080).withOpacity(0.8),
   ],
 );
-
-// GradientText appName = GradientText(
-//   'Together',
-//   style: GoogleFonts.montez(
-//     fontSize: 27,
-//   ),
-//   gradient: LinearGradient(
-//       begin: Alignment.topLeft,
-//       end: Alignment.bottomRight,
-//       colors: [
-//         Colors.white,
-//         Colors.white,
-//       ]),
-// );

@@ -7,6 +7,7 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:together/modals/models.dart';
 import 'package:together/screens/video.dart';
 import 'package:cached_video_player/cached_video_player.dart';
+import 'buildProfile.dart';
 
 class BuildTimeline extends StatefulWidget {
   final timeline;
@@ -45,48 +46,55 @@ class _BuildTimelineState extends State<BuildTimeline> {
         iconTheme: IconThemeData(color: Colors.black),
         backgroundColor: Colors.white,
         elevation: 0.0,
-        title: Text(
-          widget.homepage == true ? "Together" : "Posts",
-          style: appName,
-        ),
-        centerTitle: widget.homepage == true ? true : false,
+        leading: widget.homepage == true
+            ? Own().imageUrl == null
+                ? Icon(Icons.account_box)
+                : Container(
+                    height: 40,
+                    width: 40,
+                    padding: EdgeInsets.all(5),
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) {
+                                  return Scaffold(
+                                    backgroundColor:
+                                        Colors.lightBlueAccent.withOpacity(0.1),
+                                    body: Image.network(Own().imageUrl),
+                                  );
+                                },
+                              ));
+                            },
+                            child: Image.network(Own().imageUrl,
+                                fit: BoxFit.cover))),
+                  )
+            : null,
+        title: widget.homepage == true
+            ? InkWell(
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) {
+                      return BuildProfile(
+                        phone: Own().phone,
+                      );
+                    },
+                  ));
+                },
+                child: Text(
+                  "Together",
+                  style: appName,
+                ),
+              )
+            : Text(
+                "Posts",
+                style: appName,
+              ),
+        // centerTitle: widget.homepage == true ? true : false,
       ),
       body: Column(
         children: <Widget>[
-          // Container(
-          //   decoration: BoxDecoration(color: Colors.white, boxShadow: [
-          //     BoxShadow(
-          //         color: Colors.black.withOpacity(0.1),
-          //         spreadRadius: 0.5,
-          //         offset: Offset(2.0, 0.5))
-          //   ]),
-          //   height: height / 16,
-          //   child: Center(
-          //     child: Row(
-          //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //       children: <Widget>[
-          //         Text(
-          //           "  Together",
-          //           style: appName,
-          //         ),
-          //         Row(
-          //           children: <Widget>[
-          //             IconButton(
-          //               onPressed: () {},
-          //               icon: Icon(Icons.search),
-          //             ),
-          //             IconButton(
-          //               onPressed: () {},
-          //               icon: Icon(Icons.notifications),
-          //             ),
-          //           ],
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          // buildList(width, height)
-
           widget.homepage == true
               ? StreamBuilder(
                   stream: Firestore.instance
@@ -111,12 +119,6 @@ class _BuildTimelineState extends State<BuildTimeline> {
                           },
                         ),
                       );
-                      // ListView.builder(
-                      //   itemCount: homeTimeline.length,
-                      //   itemBuilder: (BuildContext context, int index) {
-                      //     return buildList(width, height, index);
-                      //   },
-                      // );
                     } else {
                       print("loading");
                       return Expanded(
@@ -149,84 +151,132 @@ class _BuildTimelineState extends State<BuildTimeline> {
           children: <Widget>[
             Container(
               height: 60,
-              // color: Colors.white,
               padding: EdgeInsets.only(top: 10),
               child: Center(
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(shape: BoxShape.circle),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(5),
-                        child: CachedNetworkImage(
-                          imageUrl: timeline[i].imageUrl,
-                          fit: BoxFit.fill,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8.0),
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        height: 40,
+                        width: 40,
+                        decoration: BoxDecoration(shape: BoxShape.circle),
+                        child: timeline[i].imageUrl != null
+                            ? InkWell(
+                                onTap: () {
+                                  Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) {
+                                      return Scaffold(
+                                        backgroundColor: Colors.lightBlueAccent
+                                            .withOpacity(0.1),
+                                        body:
+                                            Image.network(timeline[i].imageUrl),
+                                      );
+                                    },
+                                  ));
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5),
+                                  child: CachedNetworkImage(
+                                    imageUrl: timeline[i].imageUrl,
+                                    fit: BoxFit.fill,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                Icons.account_box,
+                                color: Colors.lightBlueAccent,
+                              ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) {
+                              return BuildProfile(
+                                //!------------------------- ToDo ---------------------------------------------
+                                phone: "+918937063090",
+                              );
+                            },
+                          ));
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              "   " + timeline[i].name,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Container(
+                              // height: 30,
+                              width: width / 1.5,
+                              // color: Colors.amber,
+                              child: AutoSizeText(
+                                "   Know by name and have a curisity to change the workd",
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              "    " + timeline[i].date,
+                              style: TextStyle(
+                                  fontSize: 10, color: Colors.lightBlueAccent),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          "   " + timeline[i].name,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Container(
-                          height: 30,
-                          width: width / 1.5,
-                          child: Text("   "),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: <Widget>[
-                        IconButton(
-                          icon: Icon(Icons.keyboard_arrow_down, size: 25),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                  content: Container(
-                                    height: width / 1.5,
-                                    child: Column(
-                                      children: <Widget>[
-                                        FlatButton(
-                                          child: Text("Report..."),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Mute..."),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Turn On Notification"),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Copy Link"),
-                                          onPressed: () {},
-                                        ),
-                                        FlatButton(
-                                          child: Text("Save Post"),
-                                          onPressed: () {},
-                                        ),
-                                      ],
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          IconButton(
+                            icon: Icon(Icons.keyboard_arrow_down, size: 25),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    content: Container(
+                                      height: width,
+                                      child: Column(
+                                        children: <Widget>[
+                                          FlatButton(
+                                            child: Text("Report..."),
+                                            onPressed: () {},
+                                          ),
+                                          FlatButton(
+                                            child: Text("Mute..."),
+                                            onPressed: () {},
+                                          ),
+                                          FlatButton(
+                                            child: Text("Turn On Notification"),
+                                            onPressed: () {},
+                                          ),
+                                          FlatButton(
+                                            child: Text("Copy Link"),
+                                            onPressed: () {},
+                                          ),
+                                          FlatButton(
+                                            child: Text("Save Post"),
+                                            onPressed: () {},
+                                          ),
+                                          FlatButton(
+                                            child: Text("Download Post"),
+                                            onPressed: () {},
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -235,11 +285,10 @@ class _BuildTimelineState extends State<BuildTimeline> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.all(18.0),
+                  padding: const EdgeInsets.only(left: 8.0, top: 5),
                   child: LimitedBox(
-                      child: Text(
+                      child: AutoSizeText(
                     timeline[i].text,
-                    style: TextStyle(fontWeight: FontWeight.bold),
                   )),
                 ),
                 timeline[i].purl.length == 1
@@ -249,31 +298,31 @@ class _BuildTimelineState extends State<BuildTimeline> {
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
                             child: InkWell(
-                              onTap: () async {
-                                await Navigator.of(context)
-                                    .push(MaterialPageRoute(
-                                  fullscreenDialog: true,
-                                  builder: (context) {
-                                    return Scaffold(
-                                      backgroundColor: Colors.transparent,
-                                      body: Container(
-                                        child: Center(
-                                          child: CachedNetworkImage(
-                                            imageUrl: timeline[i].purl[0],
-                                            placeholder: (context, url) {
-                                              return Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              );
-                                            },
-                                            fit: BoxFit.contain,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ));
-                              },
+                              // onTap: () async {
+                              //   await Navigator.of(context)
+                              //       .push(MaterialPageRoute(
+                              //     fullscreenDialog: true,
+                              //     builder: (context) {
+                              //       return Scaffold(
+                              //         backgroundColor: Colors.transparent,
+                              //         body: Container(
+                              //           child: Center(
+                              //             child: CachedNetworkImage(
+                              //               imageUrl: timeline[i].purl[0],
+                              //               placeholder: (context, url) {
+                              //                 return Center(
+                              //                   child:
+                              //                       CircularProgressIndicator(),
+                              //                 );
+                              //               },
+                              //               fit: BoxFit.contain,
+                              //             ),
+                              //           ),
+                              //         ),
+                              //       );
+                              //     },
+                              //   ));
+                              // },
                               child: CachedNetworkImage(
                                 imageUrl: timeline[i].purl[0],
                                 placeholder: (context, url) {
@@ -292,10 +341,11 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             padding:
                                 const EdgeInsets.symmetric(horizontal: 5.0),
                             child: Container(
-                                height: height / 1.5,
+                                height: width,
                                 width: width,
                                 decoration: BoxDecoration(
-                                    // color: Colors.blue.withOpacity(0.1),
+                                    color:
+                                        Colors.lightBlueAccent.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(20)),
                                 child: Swiper(
                                   onTap: (index) async {
@@ -324,9 +374,9 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                       },
                                     ));
                                   },
-                                  // autoplay: true,
-                                  // duration: 2,
                                   pagination: SwiperPagination.dots,
+                                  // layout: SwiperLayout.STACK,
+                                  // itemWidth: width,
                                   itemBuilder: (context, index) {
                                     return CachedNetworkImage(
                                       imageUrl: timeline[i].purl[index],
@@ -337,16 +387,18 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                 )))
                         : Container(),
                 timeline[i].vurl.length > 0
-                    ? VideoEidget(
-                        url: timeline[i].vurl,
-                        aspect: true,
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: VideoEidget(
+                          url: timeline[i].vurl,
+                          aspect: true,
+                          doubletab: false,
+                        ),
                       )
                     : Container(),
                 Container(
-                  // height: 50,
-                  decoration: BoxDecoration(
-                      // color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20)),
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(20)),
                   child: Row(
                     children: <Widget>[
                       Expanded(

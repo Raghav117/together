@@ -36,7 +36,7 @@ dependencies:
   flutter_swiper: ^1.1.6
   cached_network_image: ^2.2.0+1
   cached_video_player: ^1.0.3
-
+  # flutter_image_compress: ^0.7.0
   gradient_text: 
   google_fonts: 
   bottom_navy_bar: ^5.4.0

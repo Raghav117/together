@@ -133,7 +133,6 @@ class _HomePageState extends State<HomePage> {
       x = x.child(element[i]);
     }
     x = x.child("mobile").child(own.phone).set("");
-    // });
   }
 
   final items = [
@@ -193,14 +192,13 @@ class _HomePageState extends State<HomePage> {
               BuildTimeline(
                 homepage: true,
               ),
-              // Container(
-              //   color: Colors.blue,
-              // ),
               Container(
                 color: Colors.blue,
               ),
               BuildPost(),
-              BuildProfile()
+              Container(
+                color: Colors.blue,
+              ),
             ])));
   }
 }

@@ -9,10 +9,11 @@ import 'package:flutter_absolute_path/flutter_absolute_path.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'dart:io';
-// import 'package:multi_image_picker/multi_image_picker.dart';
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:video_player/video_player.dart';
 import '../modals/details.dart';
+// import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../modals/models.dart';
 
 class BuildPost extends StatefulWidget {
@@ -211,11 +212,6 @@ class _BuildPostState extends State<BuildPost> {
                             onChanged: (value) {
                               text = value;
                               setState(() {});
-
-                              // if (value.length != 0) if (post == false)
-                              //   setState(() {
-                              //     true;
-                              //   });
                             },
                             onSubmitted: (value) {
                               text = value;
@@ -223,32 +219,6 @@ class _BuildPostState extends State<BuildPost> {
                           ),
                         ),
                       ),
-                      // Container(
-                      //   child: TextField(
-                      //     textInputAction: TextInputAction.newline,
-                      //     keyboardType: TextInputType.multiline,
-                      //     maxLines: null,
-                      //     minLines: 1,
-                      //     decoration: InputDecoration(
-                      //         hintText: "   What do you want to share ???",
-                      //         disabledBorder: InputBorder.none,
-                      //         border: InputBorder.none,
-                      //         enabledBorder: InputBorder.none),
-                      //     onChanged: (value) {
-                      //       print("object");
-                      //       if (value.length == 0)
-                      //         setState(() {
-                      //           false;
-                      //         });
-
-                      //       if (value.length != 0) if (post == false)
-                      //         setState(() {
-                      //           true;
-                      //         });
-                      //     },
-                      //     onSubmitted: (value) {},
-                      //   ),
-                      // ),
                       images.length != 0
                           ? Expanded(
                               child: buildGridView(),
@@ -273,7 +243,6 @@ class _BuildPostState extends State<BuildPost> {
                                           color: Colors.lightBlueAccent,
                                         ),
                                         onPressed: () async {
-                                          // await _videoPlayerController.dispose();
                                           file = null;
                                           print(file);
                                           setState(() {});
@@ -281,8 +250,6 @@ class _BuildPostState extends State<BuildPost> {
                                             await _videoPlayerController
                                                 .dispose();
                                           }
-                                          // setState(() {});
-                                          // setState(() {});
                                         },
                                       )
                                     ],
@@ -291,9 +258,6 @@ class _BuildPostState extends State<BuildPost> {
                               ),
                             )
                           : SizedBox(),
-                      // file!=null? Expanded(
-                      //   child: buildGridView(),
-                      // ),Containe()
                       SizedBox(
                         height: 50,
                       )
@@ -320,14 +284,13 @@ class _BuildPostState extends State<BuildPost> {
                               ),
                             ],
                           ),
-                          // setState(() {});
                         ),
                         FlatButton(
                           onPressed: images.length == 0
                               ? () async {
                                   if (file != null) {
                                     await _videoPlayerController.dispose();
-                                    // file = null;
+
                                     setState(() {});
                                   }
                                   file = await FilePicker.getFile(
@@ -361,12 +324,11 @@ class _BuildPostState extends State<BuildPost> {
                               ? () async {
                                   if (file != null) {
                                     await _videoPlayerController.dispose();
-                                    // file = null;
+
                                     setState(() {});
                                   }
                                   file = await FilePicker.getFile(
                                       allowedExtensions: ["mp3"],
-                                      // file.
                                       type: FileType.custom);
                                   if (file != null) {
                                     print("File length is " +
@@ -453,9 +415,6 @@ class _BuildPostState extends State<BuildPost> {
       error = e.toString();
     }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
     if (!mounted) return;
 
     setState(() {
@@ -506,11 +465,18 @@ class _BuildPostState extends State<BuildPost> {
 
       for (var f in files) {
         try {
-          storageReference =
-              FirebaseStorage.instance.ref().child("images/${f.path}");
-          StorageUploadTask uploadTask = storageReference.putFile(File(f.path));
-          StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
-          pUrl.add(await downloadUrl.ref.getDownloadURL());
+          storageReference = FirebaseStorage.instance
+              .ref()
+              .child("CompressFile.jpg"); //"images/${f.path}"
+          // File result = await FlutterImageCompress.compressAndGetFile(
+          //   f.path,
+          //   "/data/user/0/com.example.together/cache/image.jpg",
+          //   quality: 30,
+          // );
+          // StorageUploadTask uploadTask =
+          //     storageReference.putFile(File(result.path));
+          // StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
+          // pUrl.add(await downloadUrl.ref.getDownloadURL());
           print('File Uploaded');
         } catch (e) {
           print(e);
@@ -551,11 +517,9 @@ class _BuildPostState extends State<BuildPost> {
     file = null;
     print('Successfull');
     loading = false;
+    text = "";
     setState(() {});
-    // postToLocation(path);
   }
-
-  //!---------------------------------------- Post for location ------------------------------------------------------------
 
   postToLocation(String path) {
     print(own.m);
@@ -580,16 +544,15 @@ class _BuildPostState extends State<BuildPost> {
                 .collection("line")
                 .document(path)
                 .setData({
-              "text": text,
-              "purl": pUrl,
-              "vurl": vUrl,
-              "date": date,
-              "imageurl": Own().imageUrl,
-              "name": own.name,
-            }).then((value) {
-              // print(value.path);
-              // path = value.path;
-            }).catchError((onError) => print(onError));
+                  "text": text,
+                  "purl": pUrl,
+                  "vurl": vUrl,
+                  "date": date,
+                  "imageurl": Own().imageUrl,
+                  "name": own.name,
+                })
+                .then((value) {})
+                .catchError((onError) => print(onError));
           }
         });
       });

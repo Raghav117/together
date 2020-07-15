@@ -63,8 +63,6 @@ class _VideoEidgetState extends State<VideoEidget> {
               ));
             }
           : null,
-      // child: Container(
-
       child: Stack(
         children: <Widget>[
           Align(
@@ -85,7 +83,6 @@ class _VideoEidgetState extends State<VideoEidget> {
                 )
               : SizedBox()
         ],
-        // ),
       ),
     );
   }
