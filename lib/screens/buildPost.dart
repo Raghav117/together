@@ -13,7 +13,7 @@ import 'dart:io';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:video_player/video_player.dart';
 import '../modals/details.dart';
-// import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../modals/models.dart';
 
 class BuildPost extends StatefulWidget {
@@ -117,12 +117,30 @@ class _BuildPostState extends State<BuildPost> {
                                 Container(
                                   height: 70,
                                   width: 70,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    child: CachedNetworkImage(
-                                      imageUrl: own.imageUrl,
-                                      fit: BoxFit.fill,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF000080).withOpacity(0.9),
+                                        Colors.lightBlue
+                                      ],
                                     ),
+                                  ),
+                                  child: Center(
+                                    child: own.imageUrl.length != 0
+                                        ? ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                            child: CachedNetworkImage(
+                                              imageUrl: own.imageUrl,
+                                              fit: BoxFit.fill,
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.account_circle,
+                                            color: Colors.white,
+                                            size: 70,
+                                          ),
                                   ),
                                 ),
                                 Column(
@@ -468,15 +486,15 @@ class _BuildPostState extends State<BuildPost> {
           storageReference = FirebaseStorage.instance
               .ref()
               .child("CompressFile.jpg"); //"images/${f.path}"
-          // File result = await FlutterImageCompress.compressAndGetFile(
-          //   f.path,
-          //   "/data/user/0/com.example.together/cache/image.jpg",
-          //   quality: 30,
-          // );
-          // StorageUploadTask uploadTask =
-          //     storageReference.putFile(File(result.path));
-          // StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
-          // pUrl.add(await downloadUrl.ref.getDownloadURL());
+          File result = await FlutterImageCompress.compressAndGetFile(
+            f.path,
+            "/data/user/0/com.example.together/cache/image.jpg",
+            quality: 30,
+          );
+          StorageUploadTask uploadTask =
+              storageReference.putFile(File(result.path));
+          StorageTaskSnapshot downloadUrl = (await uploadTask.onComplete);
+          pUrl.add(await downloadUrl.ref.getDownloadURL());
           print('File Uploaded');
         } catch (e) {
           print(e);
@@ -504,6 +522,7 @@ class _BuildPostState extends State<BuildPost> {
       "date": date,
       "imageurl": Own().imageUrl,
       "name": own.name,
+      "phone": own.phone
     }).then((value) {
       path = value.documentID;
       print(path);
@@ -550,6 +569,7 @@ class _BuildPostState extends State<BuildPost> {
                   "date": date,
                   "imageurl": Own().imageUrl,
                   "name": own.name,
+                  "phone": own.phone
                 })
                 .then((value) {})
                 .catchError((onError) => print(onError));

@@ -9,7 +9,6 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:together/modals/details.dart';
 import 'package:together/modals/models.dart';
 import 'package:together/screens/homepage.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -156,7 +155,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
           ),
           body: loading == false
               ? page == 1
-                  ? buildOTP(width)
+                  ? buildOTP(width, height)
                   : page == 0
                       ? buildMobileNumber(height)
                       : page == 2
@@ -399,6 +398,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
 
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.gallery);
+
                                 setState(() {});
                               },
                             ),
@@ -439,8 +439,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          file.path,
+                        child: Image.file(
+                          File(file.path),
                           fit: BoxFit.fill,
                         ),
                       ),
@@ -625,11 +625,14 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
     );
   }
 
-  Widget buildOTP(double width) {
+  Widget buildOTP(double width, double height) {
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
+          SizedBox(
+            height: height / 16,
+          ),
           Container(
               width: width,
               child: Center(child: Image.asset("assets/otp.png"))),
@@ -638,6 +641,9 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
               Text(
                 "OTP Verification",
                 style: appMobile,
+              ),
+              SizedBox(
+                height: height / 16,
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 15.0),
@@ -653,6 +659,9 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                 ),
               )
             ],
+          ),
+          SizedBox(
+            height: height / 16,
           ),
           Column(
             children: <Widget>[
@@ -696,6 +705,9 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                 ],
               ),
             ],
+          ),
+          SizedBox(
+            height: height / 16,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),

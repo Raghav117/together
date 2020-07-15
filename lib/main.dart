@@ -16,10 +16,10 @@ void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     title: "Together",
-    // home: MyApp(),
-    home: BuildProfile(
-      phone: "+919012220988",
-    ),
+    home: MyApp(),
+    // home: BuildProfile(
+    //   phone: "+919012220988",
+    // ),
   ));
 }
 

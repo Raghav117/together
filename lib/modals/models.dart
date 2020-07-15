@@ -49,7 +49,11 @@ class Own {
     _own.name = value['name'];
     _own.hobies = value['hobies'];
     _own.phone = no.toString();
-    _own.imageUrl = value['purl'];
+    if (_own.imageUrl != null)
+      _own.imageUrl = value['purl'];
+    else {
+      _own.imageUrl = "";
+    }
   }
 
   show() {
@@ -78,7 +82,9 @@ class Profile {
     this.vurl = value['vurl'];
     this.date = value['date'];
     this.name = value['name'];
-    this.imageUrl = value['imageurl'];
+    value["imageurl"] == null
+        ? this.imageUrl = ""
+        : this.imageUrl = value['imageurl'];
   }
 
   show() {}

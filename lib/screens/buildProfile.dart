@@ -162,18 +162,33 @@ class _BuildProfileState extends State<BuildProfile> {
                           child: Column(
                             children: <Widget>[
                               Container(
-                                height: height / 5,
-                                width: height / 5,
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20.0)),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20.0),
-                                  child: CachedNetworkImage(
-                                    imageUrl: user.imageUrl,
-                                    fit: BoxFit.fill,
+                                  height: height / 5,
+                                  width: height / 5,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF000080).withOpacity(0.9),
+                                        Colors.lightBlue
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ),
+                                  child: Center(
+                                    child: Own().imageUrl.length == 0
+                                        ? Icon(
+                                            Icons.account_circle,
+                                            size: height / 5,
+                                            color: Colors.white,
+                                          )
+                                        : ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            child: CachedNetworkImage(
+                                              imageUrl: user.imageUrl,
+                                              fit: BoxFit.fill,
+                                            ),
+                                          ),
+                                  )),
                             ],
                           ),
                         ),

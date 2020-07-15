@@ -47,8 +47,27 @@ class _BuildTimelineState extends State<BuildTimeline> {
         backgroundColor: Colors.white,
         elevation: 0.0,
         leading: widget.homepage == true
-            ? Own().imageUrl == null
-                ? Icon(Icons.account_box)
+            ? Own().imageUrl.length == 0
+                ? Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF000080).withOpacity(0.9),
+                          Colors.lightBlue
+                        ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.account_circle,
+                        color: Colors.white,
+                        size: 40,
+                      ),
+                    ),
+                  )
                 : Container(
                     height: 40,
                     width: 40,
@@ -161,7 +180,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                         height: 40,
                         width: 40,
                         decoration: BoxDecoration(shape: BoxShape.circle),
-                        child: timeline[i].imageUrl != null
+                        child: timeline[i].imageUrl.length != 0
                             ? InkWell(
                                 onTap: () {
                                   Navigator.of(context).push(MaterialPageRoute(
