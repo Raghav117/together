@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:together/design/styles.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -57,7 +58,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
   String errorMessage;
   String name;
   bool registered;
-  PickedFile file;
+  var file;
   _PhoneRegistrationState(this.forgot);
 
   Future getCurrentUser() async {
@@ -112,13 +113,36 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
 
   String passwordValidation;
   String confirmPasswordValidation;
+  String errorUserid;
 
   @override
   void initState() {
     validateNumber = false;
     loading = false;
+    errorUserid = "";
     name = "";
     password = "";
+    userid.addListener(() {
+      Firestore.instance
+          .collection("users")
+          .where("username", isEqualTo: userid.text.toLowerCase())
+          .getDocuments()
+          .then((value) {
+        if (value.documents.length == 0) {
+          if (errorUserid != "") {
+            setState(() {
+              errorUserid = "";
+            });
+          }
+        } else {
+          if (errorUserid != "This User Id is already taken") {
+            setState(() {
+              errorUserid = "This User Id is already taken";
+            });
+          }
+        }
+      });
+    });
     confirmPassword = "";
     super.initState();
     page = 0;
@@ -128,8 +152,8 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
   }
 
   Future<bool> _willPopCallback() async {
-    if (page == 3 && forgot == false) {
-      page = 2;
+    if (page == 4 && forgot == false || page == 3) {
+      page = page - 1;
       setState(() {});
     } else {
       return true;
@@ -153,6 +177,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
               style: appName,
             ),
           ),
+          // body: buildUsername(width, height),
           body: loading == false
               ? page == 1
                   ? buildOTP(width, height)
@@ -160,9 +185,112 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       ? buildMobileNumber(height)
                       : page == 2
                           ? buildProfile(height, width, context)
-                          : buildPassword(width, height)
+                          : page == 3
+                              ? buildUsername(width, height)
+                              : buildPassword(width, height)
               : Center(child: CircularProgressIndicator()),
         ));
+  }
+
+  TextEditingController userid = TextEditingController();
+
+  Widget buildUsername(double width, double height) {
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            SizedBox(
+              height: height / 8,
+            ),
+            Text(
+              "Set your User Id",
+              style: appMobile,
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 25.0, vertical: 40),
+              child: Container(
+                width: width,
+                height: 40,
+                child: Text(
+                  "A User Id gives you unique personality and helps you for identifing uniquely...",
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10),
+              child: Container(
+                child: new TextField(
+                  controller: userid,
+                  decoration: new InputDecoration(
+                    // labelText: "New Password",
+                    hintText: 'User Id',
+                    errorText: errorUserid.length == 0 ? null : errorUserid,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    prefixIcon: Icon(Icons.supervised_user_circle),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: height / 8,
+            ),
+            errorUserid.length == 0
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: InkWell(
+                      onTap: () {
+                        Firestore.instance
+                            .collection("users")
+                            .where("username",
+                                isEqualTo: userid.text.toLowerCase())
+                            .getDocuments()
+                            .then((value) {
+                          if (value.documents.length == 0) {
+                            setState(() {
+                              page = 4;
+                            });
+                          } else {
+                            setState(() {
+                              errorUserid = "This User Id is already taken";
+                            });
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Color(0xFF000080).withOpacity(0.9),
+                                Colors.lightBlue
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              "Confirm User ID",
+                              style: TextStyle(
+                                  fontSize: 23,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget buildPassword(double width, double height) {
@@ -287,20 +415,28 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                     }
                     if (forgot == false) {
                       try {
+                        Map<String, dynamic> data = buildSet(
+                            name,
+                            user.phoneNumber.toString(),
+                            _date.toString(),
+                            _gender[igender],
+                            password,
+                            url,
+                            userid.text);
                         await firestoreInstance
-                            .collection(user.phoneNumber)
-                            .document("profile")
-                            .setData({
-                          'name': name,
-                          'dob': _date.toString(),
-                          'gender': _gender[igender],
-                          'password': password,
-                          'purl': url
-                        });
+                            .collection("users")
+                            .document(user.phoneNumber)
+                            // await firestoreInstance
+                            //     .collection(user.phoneNumber)
+                            //     .document("profile")
+                            .setData(data);
 
                         own.name = name;
                         own.dob = _date.toString();
                         own.gender = _gender[igender];
+                        own.phone = user.phoneNumber.toString();
+                        own.userid = userid.text;
+
                         Navigator.of(context).pop();
                         Navigator.of(context).pop();
                         Navigator.of(context).push(MaterialPageRoute(
@@ -310,17 +446,17 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                       }
                     } else {
                       await firestoreInstance
-                          .collection(user.phoneNumber)
-                          .document("profile")
+                          .collection("users")
+                          .document(user.phoneNumber)
                           .updateData({'password': password});
 
                       await firestoreInstance
-                          .collection(user.phoneNumber)
-                          .document("profile")
+                          .collection("users")
+                          .document(user.phoneNumber)
                           .get()
                           .then((value) {
                         Map<dynamic, dynamic> m = value.data;
-                        own = Own.fromaMap(m, user.phoneNumber);
+                        own = Own.fromaMap(m);
                         own.show();
                       });
 
@@ -398,7 +534,15 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
 
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.gallery);
-
+                                if (file != null) {
+                                  file = await FlutterImageCompress
+                                      .compressAndGetFile(
+                                    file.path,
+                                    "/data/user/0/com.example.together/cache/image.jpg",
+                                    quality: 30,
+                                  );
+                                  print(File(file.path).lengthSync());
+                                }
                                 setState(() {});
                               },
                             ),
@@ -409,6 +553,15 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
 
                                 file = await ImagePicker.platform
                                     .pickImage(source: ImageSource.camera);
+                                if (file != null) {
+                                  file = await FlutterImageCompress
+                                      .compressAndGetFile(
+                                    file.path,
+                                    "/data/user/0/com.example.together/cache/image.jpg",
+                                    quality: 30,
+                                  );
+                                  print(File(file.path).lengthSync());
+                                }
                                 setState(() {});
                               },
                             ),
@@ -720,7 +873,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   var _credential = PhoneAuthProvider.getCredential(
                       verificationId: verificationId, smsCode: otp);
                   await _auth.signInWithCredential(_credential).then((value) {
-                    forgot == false ? page = 2 : page = 3;
+                    forgot == false ? page = 2 : page = 4;
                     setState(() {
                       loading = false;
                     });
@@ -837,7 +990,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                   loading = true;
                 });
                 if (forgot == false) {
-                  registered = await checkUser(mobileNo.toString());
+                  registered = await checkRegisterdUSer(mobileNo.toString());
                   if (registered == false) {
                     await registerUser(mobileNo.toString(), context);
                   } else {
@@ -846,7 +999,7 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                     setState(() {});
                   }
                 } else {
-                  registered = await checkUser(mobileNo.toString());
+                  registered = await checkRegisterdUSer(mobileNo.toString());
                   if (registered == false) {
                     setState(() {
                       errorNumber = "Not Registered";

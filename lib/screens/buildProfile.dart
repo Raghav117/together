@@ -44,22 +44,23 @@ class _BuildProfileState extends State<BuildProfile> {
 
   loadProfile() async {
     await Firestore.instance
-        .collection(widget.phone)
-        .document("profile")
+        .collection("users")
+        .document(widget.phone)
         .get()
         .then((value) {
       // print(value.data["gender"]);
-      user = User.fromaMap(value.data, widget.phone);
+      user = User.fromaMap(value.data);
       // print(user.show());
     });
     await Firestore.instance
-        .collection(widget.phone)
-        .document("timeline")
-        .collection("main")
+        .collection("users")
+        .document(widget.phone)
+        .collection("posts")
         .getDocuments()
         .then((value) {
       value.documents.forEach((element) {
-        profileuntag.add(Profile.fromaMap(element.data));
+        print(element.data);
+        profileuntag.insert(0, Profile.fromaMap(element.data));
       });
     });
     loading = false;
@@ -111,6 +112,8 @@ class _BuildProfileState extends State<BuildProfile> {
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) {
                                 return Scaffold(
+                                  backgroundColor:
+                                      Colors.lightBlueAccent.withOpacity(0.5),
                                   body: SafeArea(
                                     child: Container(
                                       height: height,
@@ -119,9 +122,19 @@ class _BuildProfileState extends State<BuildProfile> {
                                         // mainAxisAlignment:
                                         //     MainAxisAlignment.start,
                                         children: <Widget>[
-                                          CachedNetworkImage(
-                                            imageUrl: user.imageUrl,
-                                            fit: BoxFit.contain,
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: <Widget>[
+                                                CachedNetworkImage(
+                                                  imageUrl: user.imageUrl,
+                                                  fit: BoxFit.contain,
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                           Row(
                                             mainAxisAlignment:
@@ -185,7 +198,7 @@ class _BuildProfileState extends State<BuildProfile> {
                                                 BorderRadius.circular(20),
                                             child: CachedNetworkImage(
                                               imageUrl: user.imageUrl,
-                                              fit: BoxFit.fill,
+                                              fit: BoxFit.fitWidth,
                                             ),
                                           ),
                                   )),

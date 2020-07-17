@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
-import 'package:together/screens/buildProfile.dart';
-import 'package:together/screens/buildTimeline.dart';
-import 'package:together/screens/intrest.dart';
 import 'package:together/screens/registration.dart';
 import 'package:together/screens/homepage.dart';
 
@@ -17,9 +13,6 @@ void main() {
     debugShowCheckedModeBanner: false,
     title: "Together",
     home: MyApp(),
-    // home: BuildProfile(
-    //   phone: "+919012220988",
-    // ),
   ));
 }
 
@@ -29,73 +22,71 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  TextEditingController userid;
+  TextEditingController password;
   bool pass;
   bool registered;
-  FirebaseAuth _auth;
-
-  String errorUser;
   bool loading;
-  String errorPassword;
   final firestoreInstance = Firestore.instance;
   @override
   void initState() {
     pass = false;
-    _auth = FirebaseAuth.instance;
-
-    loading = true;
-    num = "";
-    login();
-    password = "";
+    loading = false;
+    userid = TextEditingController();
+    password = TextEditingController();
     super.initState();
   }
 
-//! ********************************************************  Login Method   ********************************************************
+//! ********************************************************  ToDo  Login Method   ********************************************************
 
-  login() async {
-    await _auth.currentUser().then((user) {
-      if (user != null) {
-        try {
-          firestoreInstance
-              .collection(user.phoneNumber)
-              .document("profile")
-              .get()
-              .then((value) {
-            if (value.exists) {
-              Map<dynamic, dynamic> m = value.data;
-              Own r = Own.fromaMap(m, user.phoneNumber.toString());
-              print(user.phoneNumber);
-              r.show();
-              Navigator.of(context).pop();
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (BuildContext context) => HomePage(),
-                  ));
-            } else {
-              _auth.signOut();
-              setState(() {
-                loading = false;
-              });
-            }
-          });
-        } catch (e) {
-          setState(() {
-            loading = false;
-            print("Not USer");
-          });
-        }
-      } else {
-        setState(() {
-          print("No");
+  // login() async {
+  //   await _auth.currentUser().then((user) {
+  //     if (user != null) {
+  //       try {
+  //         firestoreInstance
+  //             .collection("user").where(field)
+  //             .document().
+  //             .get()
+  //             .then((value) {
+  //           if (value.exists) {
+  //             Map<dynamic, dynamic> m = value.data;
+  //             Own r = Own.fromaMap(m, user.phoneNumber.toString());
+  //             print(user.phoneNumber);
+  //             r.show();
+  //             Navigator.of(context).pop();
+  //             Navigator.push(
+  //                 context,
+  //                 MaterialPageRoute(
+  //                   builder: (BuildContext context) => HomePage(),
+  //                 ));
+  //           } else {
+  //             _auth.signOut();
+  //             setState(() {
+  //               loading = false;
+  //             });
+  //           }
+  //         });
+  //       } catch (e) {
+  //         setState(() {
+  //           loading = false;
+  //           print("Not USer");
+  //         });
+  //       }
+  //     } else {
+  //       setState(() {
+  //         print("No");
 
-          loading = false;
-        });
-      }
-    });
-  }
+  //         loading = false;
+  //       });
+  //     }
+  //   });
+  // }
 
-  String num;
-  String password;
+  // Future<String> checkUser(num, password) async {
+  //   String registered = "";
+
+  //   return registered;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -122,13 +113,11 @@ class _MyAppState extends State<MyApp> {
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
                     child: Container(
                       child: new TextField(
-                        onChanged: (value) => num = value,
-                        onSubmitted: (value) => num = value,
+                        controller: userid,
                         decoration: new InputDecoration(
                             counterText: 'User ID / Mobile No.',
                             labelText: 'User ID / Mobile No.',
                             hintText: 'User ID / Mobile No.',
-                            errorText: errorUser,
                             prefixIcon: Icon(Icons.supervisor_account)),
                       ),
                     ),
@@ -138,12 +127,10 @@ class _MyAppState extends State<MyApp> {
                         horizontal: 25.0, vertical: 10),
                     child: Container(
                       child: new TextField(
-                        onChanged: (value) => password = value,
-                        onSubmitted: (value) => password = value,
+                        controller: password,
                         obscureText: !pass ? true : false,
                         decoration: new InputDecoration(
                             counterText: "Password",
-                            errorText: errorPassword,
                             labelText: "Password",
                             hintText: 'Password',
                             prefixIcon: Icon(Icons.security),
@@ -173,41 +160,73 @@ class _MyAppState extends State<MyApp> {
                       children: <Widget>[
                         InkWell(
                           onTap: () async {
-                            if (num.length != 0 && password.length != 0) {
+                            if (userid.text.length != 0 &&
+                                password.text.length != 0) {
                               setState(() {
                                 loading = true;
                               });
-                              if (!await checkUser(num)) {
-                                errorUser = "Not Registered";
-                                setState(() {
-                                  loading = false;
-                                });
-                              } else {
-                                firestoreInstance
-                                    .collection(num)
-                                    .document("profile")
-                                    .get()
-                                    .then((value) {
-                                  print(value.data);
-                                  print(value.data["password"]);
-                                  if (value.data["password"] != password) {
-                                    errorPassword = "Wrong Password";
-                                    setState(() {
-                                      loading = false;
-                                    });
-                                  } else {
+                              Firestore.instance
+                                  .collection("users")
+                                  .document(userid.text)
+                                  .get()
+                                  .then((value) {
+                                if (value.data == null) {
+                                  Firestore.instance
+                                      .collection("users")
+                                      .where("userid", isEqualTo: userid.text)
+                                      .getDocuments()
+                                      .then((value) {
+                                    if (value.documents.length == 0) {
+                                      print("Not Registered");
+                                      setState(() {
+                                        loading = false;
+                                      });
+                                      // print("none");
+                                    } else {
+                                      print("password is ");
+                                      if (value.documents[0].data["password"] ==
+                                          password.text) {
+                                        Map<dynamic, dynamic> m =
+                                            value.documents[0].data;
+                                        Own r = Own.fromaMap(m);
+                                        print(num);
+                                        r.show();
+                                        print("Yes");
+                                        Navigator.pop(context);
+                                        Navigator.of(context)
+                                            .push(MaterialPageRoute(
+                                          builder: (context) => HomePage(),
+                                        ));
+                                      } else {
+                                        print("Invalid Password");
+                                        setState(() {
+                                          loading = false;
+                                        });
+                                      }
+                                      // print();
+                                    }
+                                  });
+                                } else {
+                                  if (value.data["password"] == password.text) {
                                     Map<dynamic, dynamic> m = value.data;
-                                    Own r = Own.fromaMap(m, num);
+                                    Own r = Own.fromaMap(m);
                                     print(num);
                                     r.show();
+                                    print("Yes");
                                     Navigator.pop(context);
                                     Navigator.of(context)
                                         .push(MaterialPageRoute(
                                       builder: (context) => HomePage(),
                                     ));
+                                  } else {
+                                    print("Invalid Password");
+
+                                    setState(() {
+                                      loading = false;
+                                    });
                                   }
-                                });
-                              }
+                                }
+                              });
                             }
                           },
                           child: Container(

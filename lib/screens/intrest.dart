@@ -167,8 +167,8 @@ class _IntrestScreenState extends State<IntrestScreen> {
                                     }
                                     try {
                                       await firestoreInstance
-                                          .collection(user.phoneNumber)
-                                          .document("profile")
+                                          .collection("users")
+                                          .document(user.phoneNumber)
                                           .updateData({
                                         "hobies": hobies,
                                       });

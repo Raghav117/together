@@ -39,6 +39,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     _pageController = PageController();
+    own.show();
 
     index = 0;
     super.initState();
@@ -77,27 +78,23 @@ class _HomePageState extends State<HomePage> {
 
   updateLocation(Map m) async {
     await firestoreInstance
-        .collection(own.phone)
-        .document("location")
+        .collection("users")
+        .document(own.phone)
         .get()
-        .then((value) => {
-              if (value.exists)
-                {
-                  removeRealLocation(value.data),
-                  firestoreInstance
-                      .collection(own.phone)
-                      .document('location')
-                      .updateData(m)
-                }
-              else
-                {
-                  firestoreInstance
-                      .collection(own.phone)
-                      .document("location")
-                      .setData(m)
-                }
-            })
-        .then((value) {
+        .then((value) async {
+      print(value.data);
+      if (value.data["longitude"] != null) {
+        Map<String, String> m = Map();
+        m["longitude"] = value.data["longitude"];
+        m["latitude"] = value.data["latitude"];
+
+        removeRealLocation(value.data);
+      }
+      await firestoreInstance
+          .collection("users")
+          .document(own.phone)
+          .updateData(m);
+    }).then((value) {
       print(value);
       updateRealLocation(m);
     });

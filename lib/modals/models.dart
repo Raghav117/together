@@ -7,7 +7,9 @@ class User {
   String hobies;
   String dob;
   String phone;
-  Map m;
+  String userid;
+  String password;
+
   show() {
     print(gender);
     print(dob);
@@ -17,12 +19,13 @@ class User {
     print(phone);
   }
 
-  User.fromaMap(value, no) {
+  User.fromaMap(value) {
     this.gender = value['gender'];
     this.dob = value['dob'];
     this.name = value['name'];
     this.hobies = value['hobies'];
-    this.phone = no.toString();
+    this.userid = value['userid'];
+    this.phone = value["phone"];
     this.imageUrl = value['purl'];
   }
 }
@@ -34,6 +37,8 @@ class Own {
   String hobies;
   String dob;
   String phone;
+  String userid;
+  String password;
 
   Map m;
 
@@ -43,17 +48,14 @@ class Own {
     return _own;
   }
 
-  Own.fromaMap(value, no) {
+  Own.fromaMap(value) {
     _own.gender = value['gender'];
+    _own.userid = value['userid'];
     _own.dob = value['dob'];
     _own.name = value['name'];
     _own.hobies = value['hobies'];
-    _own.phone = no.toString();
-    if (_own.imageUrl != null)
-      _own.imageUrl = value['purl'];
-    else {
-      _own.imageUrl = "";
-    }
+    _own.phone = value['phone'];
+    _own.imageUrl = value["purl"];
   }
 
   show() {

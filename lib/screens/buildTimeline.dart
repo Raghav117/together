@@ -64,7 +64,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                       child: Icon(
                         Icons.account_circle,
                         color: Colors.white,
-                        size: 40,
+                        size: 30,
                       ),
                     ),
                   )
@@ -80,8 +80,9 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                 builder: (context) {
                                   return Scaffold(
                                     backgroundColor:
-                                        Colors.lightBlueAccent.withOpacity(0.1),
-                                    body: Image.network(Own().imageUrl),
+                                        Colors.lightBlueAccent.withOpacity(0.7),
+                                    body: Center(
+                                        child: Image.network(Own().imageUrl)),
                                   );
                                 },
                               ));
@@ -184,12 +185,12 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             ? InkWell(
                                 onTap: () {
                                   Navigator.of(context).push(MaterialPageRoute(
+                                    fullscreenDialog: true,
                                     builder: (context) {
                                       return Scaffold(
-                                        backgroundColor: Colors.lightBlueAccent
-                                            .withOpacity(0.1),
-                                        body:
-                                            Image.network(timeline[i].imageUrl),
+                                        body: Center(
+                                            child: Image.network(
+                                                timeline[i].imageUrl)),
                                       );
                                     },
                                   ));
@@ -316,41 +317,14 @@ class _BuildTimelineState extends State<BuildTimeline> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: Container(
-                            child: InkWell(
-                              // onTap: () async {
-                              //   await Navigator.of(context)
-                              //       .push(MaterialPageRoute(
-                              //     fullscreenDialog: true,
-                              //     builder: (context) {
-                              //       return Scaffold(
-                              //         backgroundColor: Colors.transparent,
-                              //         body: Container(
-                              //           child: Center(
-                              //             child: CachedNetworkImage(
-                              //               imageUrl: timeline[i].purl[0],
-                              //               placeholder: (context, url) {
-                              //                 return Center(
-                              //                   child:
-                              //                       CircularProgressIndicator(),
-                              //                 );
-                              //               },
-                              //               fit: BoxFit.contain,
-                              //             ),
-                              //           ),
-                              //         ),
-                              //       );
-                              //     },
-                              //   ));
-                              // },
-                              child: CachedNetworkImage(
-                                imageUrl: timeline[i].purl[0],
-                                placeholder: (context, url) {
-                                  return Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                },
-                                fit: BoxFit.contain,
-                              ),
+                            child: CachedNetworkImage(
+                              imageUrl: timeline[i].purl[0],
+                              placeholder: (context, url) {
+                                return Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              },
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),

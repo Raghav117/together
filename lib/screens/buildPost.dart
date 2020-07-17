@@ -130,7 +130,7 @@ class _BuildPostState extends State<BuildPost> {
                                     child: own.imageUrl.length != 0
                                         ? ClipRRect(
                                             borderRadius:
-                                                BorderRadius.circular(20.0),
+                                                BorderRadius.circular(10.0),
                                             child: CachedNetworkImage(
                                               imageUrl: own.imageUrl,
                                               fit: BoxFit.fill,
@@ -441,13 +441,12 @@ class _BuildPostState extends State<BuildPost> {
     });
   }
 
-  String vUrl = "";
-  List<String> pUrl = List();
-  String date;
-
   //!---------------------------------------- Post Upload ------------------------------------------------------------
 
   postUpload() async {
+    String vUrl = "";
+    List<String> pUrl = List();
+    String date;
     loading = true;
     setState(() {});
     StorageReference storageReference;
@@ -483,9 +482,8 @@ class _BuildPostState extends State<BuildPost> {
 
       for (var f in files) {
         try {
-          storageReference = FirebaseStorage.instance
-              .ref()
-              .child("CompressFile.jpg"); //"images/${f.path}"
+          storageReference =
+              FirebaseStorage.instance.ref().child(f.path); //"images/${f.path}"
           File result = await FlutterImageCompress.compressAndGetFile(
             f.path,
             "/data/user/0/com.example.together/cache/image.jpg",
@@ -511,26 +509,29 @@ class _BuildPostState extends State<BuildPost> {
         "-" +
         dateTime.year.toString();
 
+//!  ------------------------------   ToDo  --------------------------------------
+    path = dateTime.toString();
     await firestoreInstance
-        .collection(own.phone)
-        .document("timeline")
-        .collection("main")
-        .add({
+        .collection("users")
+        .document(own.phone)
+        .collection("posts")
+        .document(path)
+        .setData({
       "text": text,
       "purl": pUrl,
       "vurl": vUrl,
       "date": date,
-      "imageurl": Own().imageUrl,
+      "imageurl": own.imageUrl,
       "name": own.name,
-      "phone": own.phone
-    }).then((value) {
-      path = value.documentID;
-      print(path);
-
+      "phone": own.phone,
+      "userid": own.userid
+    }).whenComplete(() {
       loading = false;
       setState(() {});
-      postToLocation(path);
     });
+    print(path);
+
+    // postToLocation(path);
 
     images.clear();
     file = null;
@@ -539,44 +540,44 @@ class _BuildPostState extends State<BuildPost> {
     text = "";
     setState(() {});
   }
+//! ---------------------------------  ToDo   -------------------------------------------------------------
+  // postToLocation(String path) {
+  //   print(own.m);
 
-  postToLocation(String path) {
-    print(own.m);
+  //   List list = giveGeocode(own.m, 5);
+  //   int i = 0;
+  //   print(list);
+  //   var x;
 
-    List list = giveGeocode(own.m, 5);
-    int i = 0;
-    print(list);
-    var x;
+  //   list.forEach((element) {
+  //     x = FirebaseDatabase.instance.reference();
+  //     for (i = 0; i != element.length; ++i) {
+  //       x = x.child(element[i]);
+  //     }
 
-    list.forEach((element) {
-      x = FirebaseDatabase.instance.reference();
-      for (i = 0; i != element.length; ++i) {
-        x = x.child(element[i]);
-      }
-
-      x.child("mobile").once().then((value) async {
-        value.value.forEach((key, value) async {
-          if (key != own.phone) {
-            await firestoreInstance
-                .collection(key)
-                .document("timeline")
-                .collection("line")
-                .document(path)
-                .setData({
-                  "text": text,
-                  "purl": pUrl,
-                  "vurl": vUrl,
-                  "date": date,
-                  "imageurl": Own().imageUrl,
-                  "name": own.name,
-                  "phone": own.phone
-                })
-                .then((value) {})
-                .catchError((onError) => print(onError));
-          }
-        });
-      });
-      print("Completed");
-    });
-  }
+  //     x.child("mobile").once().then((value) async {
+  //       value.value.forEach((key, value) async {
+  //         if (key != own.phone) {
+  //           await firestoreInstance
+  //               .collection(key)
+  //               .document("timeline")
+  //               .collection("line")
+  //               .document(path)
+  //               .setData({
+  //                 "text": text,
+  //                 "purl": pUrl,
+  //                 "vurl": vUrl,
+  //                 "date": date,
+  //                 "imageurl": Own().imageUrl,
+  //                 "name": own.name,
+  //                 "phone": own.phone
+  //               })
+  //               .then((value) {})
+  //               .catchError((onError) => print(onError));
+  //         }
+  //       });
+  //     });
+  //     print("Completed");
+  //   });
+  // }
 }
