@@ -56,6 +56,7 @@ class _BuildProfileState extends State<BuildProfile> {
         .collection("users")
         .document(widget.phone)
         .collection("posts")
+        .orderBy("date", descending: true)
         .getDocuments()
         .then((value) {
       value.documents.forEach((element) {
@@ -176,15 +177,18 @@ class _BuildProfileState extends State<BuildProfile> {
                             children: <Widget>[
                               Container(
                                   height: height / 5,
-                                  width: height / 5,
+                                  width: width / 5,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFF000080).withOpacity(0.9),
-                                        Colors.lightBlue
-                                      ],
-                                    ),
+                                    gradient: Own().imageUrl.length == 0
+                                        ? LinearGradient(
+                                            colors: [
+                                              Color(0xFF000080)
+                                                  .withOpacity(0.9),
+                                              Colors.lightBlue
+                                            ],
+                                          )
+                                        : null,
                                   ),
                                   child: Center(
                                     child: Own().imageUrl.length == 0
@@ -196,8 +200,8 @@ class _BuildProfileState extends State<BuildProfile> {
                                         : ClipRRect(
                                             borderRadius:
                                                 BorderRadius.circular(20),
-                                            child: CachedNetworkImage(
-                                              imageUrl: user.imageUrl,
+                                            child: Image.network(
+                                              user.imageUrl,
                                               fit: BoxFit.fitWidth,
                                             ),
                                           ),
@@ -557,10 +561,20 @@ class _BuildProfileState extends State<BuildProfile> {
                         Padding(
                             padding: const EdgeInsets.all(8),
                             child: AutoSizeText(
+                              p.date,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            )),
+                        Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: AutoSizeText(
                               p.text,
                               style: TextStyle(color: Colors.white),
                               overflow: TextOverflow.ellipsis,
-                              maxLines: 5,
+                              maxLines: 4,
                             )),
                       ],
                     ),
@@ -597,10 +611,18 @@ class _BuildProfileState extends State<BuildProfile> {
                       children: <Widget>[
                         Padding(
                             padding: const EdgeInsets.all(8),
+                            child: AutoSizeText(p.date,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1)),
+                        Padding(
+                            padding: const EdgeInsets.all(8),
                             child: AutoSizeText(p.text,
                                 style: TextStyle(color: Colors.white),
                                 overflow: TextOverflow.ellipsis,
-                                maxLines: 5)),
+                                maxLines: 4)),
                       ],
                     ),
                   ),

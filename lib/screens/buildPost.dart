@@ -119,12 +119,15 @@ class _BuildPostState extends State<BuildPost> {
                                   width: 70,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Color(0xFF000080).withOpacity(0.9),
-                                        Colors.lightBlue
-                                      ],
-                                    ),
+                                    gradient: own.imageUrl.length == 0
+                                        ? LinearGradient(
+                                            colors: [
+                                              Color(0xFF000080)
+                                                  .withOpacity(0.9),
+                                              Colors.lightBlue
+                                            ],
+                                          )
+                                        : null,
                                   ),
                                   child: Center(
                                     child: own.imageUrl.length != 0
@@ -502,15 +505,16 @@ class _BuildPostState extends State<BuildPost> {
 
     String path;
     DateTime dateTime;
+
     dateTime = DateTime.now();
     date = dateTime.day.toString() +
         "-" +
         dateTime.month.toString() +
         "-" +
         dateTime.year.toString();
-
+    path = difference(dateTime);
 //!  ------------------------------   ToDo  --------------------------------------
-    path = dateTime.toString();
+
     await firestoreInstance
         .collection("users")
         .document(own.phone)
@@ -528,10 +532,10 @@ class _BuildPostState extends State<BuildPost> {
     }).whenComplete(() {
       loading = false;
       setState(() {});
+
+      postToLocation(path, pUrl, vUrl, date);
     });
     print(path);
-
-    // postToLocation(path);
 
     images.clear();
     file = null;
@@ -540,44 +544,49 @@ class _BuildPostState extends State<BuildPost> {
     text = "";
     setState(() {});
   }
+
+  difference(DateTime dateTime) {
+    String date = (9999 - dateTime.year).toString() +
+        "-" +
+        (12 - dateTime.month).toString() +
+        "-" +
+        (31 - dateTime.day).toString() +
+        " " +
+        (24 - dateTime.hour).toString() +
+        "-" +
+        (60 - dateTime.minute).toString() +
+        "-" +
+        dateTime.second.toString();
+
+    print(date);
+    return date;
+  }
+
 //! ---------------------------------  ToDo   -------------------------------------------------------------
-  // postToLocation(String path) {
-  //   print(own.m);
+  postToLocation(String path, pUrl, vUrl, date) {
+    print(own.m);
 
-  //   List list = giveGeocode(own.m, 5);
-  //   int i = 0;
-  //   print(list);
-  //   var x;
+    List list = giveGeocode(own.m, 5);
+    int i = 0;
+    print(list);
+    var x;
 
-  //   list.forEach((element) {
-  //     x = FirebaseDatabase.instance.reference();
-  //     for (i = 0; i != element.length; ++i) {
-  //       x = x.child(element[i]);
-  //     }
+    list.forEach((element) {
+      x = Firestore.instance
+          .collection(element)
+          .document(path + own.userid)
+          .setData({
+        "text": text,
+        "purl": pUrl,
+        "vurl": vUrl,
+        "date": date,
+        "imageurl": own.imageUrl,
+        "name": own.name,
+        "phone": own.phone,
+        "userid": own.userid
+      });
 
-  //     x.child("mobile").once().then((value) async {
-  //       value.value.forEach((key, value) async {
-  //         if (key != own.phone) {
-  //           await firestoreInstance
-  //               .collection(key)
-  //               .document("timeline")
-  //               .collection("line")
-  //               .document(path)
-  //               .setData({
-  //                 "text": text,
-  //                 "purl": pUrl,
-  //                 "vurl": vUrl,
-  //                 "date": date,
-  //                 "imageurl": Own().imageUrl,
-  //                 "name": own.name,
-  //                 "phone": own.phone
-  //               })
-  //               .then((value) {})
-  //               .catchError((onError) => print(onError));
-  //         }
-  //       });
-  //     });
-  //     print("Completed");
-  //   });
-  // }
+      print("Completed");
+    });
+  }
 }

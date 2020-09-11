@@ -51,7 +51,10 @@ dependencies:
   cloud_firestore:
   firebase_storage:
   firebase_database:
-  # contacts_service: ^0.4.6
+  shared_preferences:
+  pinch_zoom_image: "^0.2.5"
+  # # contacts_service: ^0.4.6
+  # flutter_secure_storage: ^3.3.3
   # image_cropper: ^1.2.3
 
 

@@ -432,7 +432,11 @@ class _PhoneRegistrationState extends State<PhoneRegistration> {
                             .setData(data);
 
                         own.name = name;
-                        own.dob = _date.toString();
+                        own.dob = _date.day.toString() +
+                            "-" +
+                            _date.month.toString() +
+                            "-" +
+                            _date.year.toString();
                         own.gender = _gender[igender];
                         own.phone = user.phoneNumber.toString();
                         own.userid = userid.text;

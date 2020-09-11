@@ -77,6 +77,8 @@ class Profile {
   String date;
   String name;
   String imageUrl;
+  String phone;
+  String userid;
 
   Profile.fromaMap(value) {
     this.text = value['text'];
@@ -84,9 +86,9 @@ class Profile {
     this.vurl = value['vurl'];
     this.date = value['date'];
     this.name = value['name'];
-    value["imageurl"] == null
-        ? this.imageUrl = ""
-        : this.imageUrl = value['imageurl'];
+    this.imageUrl = value['imageurl'];
+    this.phone = value['phone'];
+    this.userid = value['userid'];
   }
 
   show() {}

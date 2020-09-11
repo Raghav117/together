@@ -2,9 +2,12 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:pinch_zoom_image/pinch_zoom_image.dart';
 import 'package:together/design/styles.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:together/modals/details.dart';
 import 'package:together/modals/models.dart';
+import 'package:together/screens/buildScreen.dart';
 import 'package:together/screens/video.dart';
 import 'package:cached_video_player/cached_video_player.dart';
 import 'buildProfile.dart';
@@ -21,13 +24,36 @@ class BuildTimeline extends StatefulWidget {
 
 class _BuildTimelineState extends State<BuildTimeline> {
   final List<Profile> timeline;
+  bool loading;
   List<Profile> homeTimeline;
   _BuildTimelineState(this.timeline);
 
   @override
   void initState() {
+    loading = true;
     super.initState();
     homeTimeline = List();
+    if (widget.homepage == true) {
+      func();
+    }
+  }
+
+  func() async {
+    var x = giveGeocode(Own().m, 5);
+    print("yaeah");
+    print(x);
+
+    Firestore.instance.collection(x[8]).getDocuments().then((value) {
+      print(value.documents.length);
+      value.documents.forEach((element) {
+        homeTimeline.add(Profile.fromaMap(element.data));
+      });
+    }).whenComplete(() {
+      print(homeTimeline.length);
+      loading = false;
+      setState(() {});
+    });
+    setState(() {});
   }
 
   @override
@@ -46,51 +72,6 @@ class _BuildTimelineState extends State<BuildTimeline> {
         iconTheme: IconThemeData(color: Colors.black),
         backgroundColor: Colors.white,
         elevation: 0.0,
-        leading: widget.homepage == true
-            ? Own().imageUrl.length == 0
-                ? Container(
-                    height: 40,
-                    width: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFF000080).withOpacity(0.9),
-                          Colors.lightBlue
-                        ],
-                      ),
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.account_circle,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  )
-                : Container(
-                    height: 40,
-                    width: 40,
-                    padding: EdgeInsets.all(5),
-                    child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) {
-                                  return Scaffold(
-                                    backgroundColor:
-                                        Colors.lightBlueAccent.withOpacity(0.7),
-                                    body: Center(
-                                        child: Image.network(Own().imageUrl)),
-                                  );
-                                },
-                              ));
-                            },
-                            child: Image.network(Own().imageUrl,
-                                fit: BoxFit.cover))),
-                  )
-            : null,
         title: widget.homepage == true
             ? InkWell(
                 onTap: () {
@@ -113,49 +94,22 @@ class _BuildTimelineState extends State<BuildTimeline> {
               ),
         // centerTitle: widget.homepage == true ? true : false,
       ),
-      body: Column(
-        children: <Widget>[
-          widget.homepage == true
-              ? StreamBuilder(
-                  stream: Firestore.instance
-                      .collection(Own().phone)
-                      .document("timeline")
-                      .collection("line")
-                      .getDocuments()
-                      .asStream(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      print("data");
-                      snapshot.requireData.documents.forEach((element) {
-                        homeTimeline.add(Profile.fromaMap(element));
-                      });
-
-                      return Flexible(
-                        child: ListView.builder(
-                          itemCount: homeTimeline.length,
-                          itemBuilder: (context, index) {
-                            return buildList(
-                                width, height, index, homeTimeline);
-                          },
-                        ),
-                      );
-                    } else {
-                      print("loading");
-                      return Expanded(
-                          child: Center(child: CircularProgressIndicator()));
-                    }
-                  },
-                )
-              : Flexible(
+      body: loading == false
+          ? Column(
+              children: <Widget>[
+                Flexible(
                   child: ListView.builder(
-                    itemCount: timeline.length,
+                    itemCount: homeTimeline.length,
                     itemBuilder: (BuildContext context, int index) {
-                      return buildList(width, height, index, timeline);
+                      return buildList(width, height, index, homeTimeline);
                     },
                   ),
                 )
-        ],
-      ),
+              ],
+            )
+          : Center(
+              child: CircularProgressIndicator(),
+            ),
     );
   }
 
@@ -180,7 +134,9 @@ class _BuildTimelineState extends State<BuildTimeline> {
                       Container(
                         height: 40,
                         width: 40,
-                        decoration: BoxDecoration(shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.lightBlueAccent.withOpacity(0.1)),
                         child: timeline[i].imageUrl.length != 0
                             ? InkWell(
                                 onTap: () {
@@ -196,7 +152,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                   ));
                                 },
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
+                                  borderRadius: BorderRadius.circular(10),
                                   child: CachedNetworkImage(
                                     imageUrl: timeline[i].imageUrl,
                                     fit: BoxFit.fill,
@@ -214,7 +170,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             builder: (context) {
                               return BuildProfile(
                                 //!------------------------- ToDo ---------------------------------------------
-                                phone: "+918937063090",
+                                phone: timeline[i].phone,
                               );
                             },
                           ));
@@ -230,11 +186,13 @@ class _BuildTimelineState extends State<BuildTimeline> {
                             Container(
                               // height: 30,
                               width: width / 1.5,
+                              padding: EdgeInsets.only(left: 10),
                               // color: Colors.amber,
                               child: AutoSizeText(
-                                "   Know by name and have a curisity to change the workd",
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                                  // "   Know by name and have a curisity to change the workd",
+                                  timeline[i].userid,
+                                  overflow: TextOverflow.ellipsis,
+                                  minFontSize: 5),
                             ),
                             Text(
                               "    " + timeline[i].date,
@@ -282,7 +240,7 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                             onPressed: () {},
                                           ),
                                           FlatButton(
-                                            child: Text("Download Post"),
+                                            child: Text("Download it"),
                                             onPressed: () {},
                                           ),
                                         ],
@@ -316,16 +274,20 @@ class _BuildTimelineState extends State<BuildTimeline> {
                         padding: const EdgeInsets.symmetric(horizontal: 5.0),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            child: CachedNetworkImage(
+                          child: PinchZoomImage(
+                            image: CachedNetworkImage(
                               imageUrl: timeline[i].purl[0],
                               placeholder: (context, url) {
                                 return Center(
                                   child: CircularProgressIndicator(),
                                 );
                               },
-                              fit: BoxFit.contain,
+                              // fit: BoxFit.contain,
                             ),
+                            // hideStatusBarWhileZooming: true,
+                            // onZoomStart: (value) {
+                            //   print(value);
+                            // },
                           ),
                         ),
                       )
@@ -337,43 +299,59 @@ class _BuildTimelineState extends State<BuildTimeline> {
                                 height: width,
                                 width: width,
                                 decoration: BoxDecoration(
-                                    color:
-                                        Colors.lightBlueAccent.withOpacity(0.1),
+                                    color: Colors.black,
+                                    // Colors.lightBlueAccent.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(20)),
                                 child: Swiper(
-                                  onTap: (index) async {
-                                    await Navigator.of(context)
-                                        .push(MaterialPageRoute(
-                                      fullscreenDialog: true,
-                                      builder: (context) {
-                                        return Scaffold(
-                                          backgroundColor: Colors.transparent,
-                                          body: Container(
-                                            child: Center(
-                                              child: CachedNetworkImage(
-                                                imageUrl:
-                                                    timeline[i].purl[index],
-                                                placeholder: (context, url) {
-                                                  return Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
-                                                  );
-                                                },
-                                                fit: BoxFit.contain,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    ));
-                                  },
+                                  // onTap: (index) async {
+                                  //   Navigator.of(context)
+                                  //       .push(MaterialPageRoute(
+                                  //     builder: (context) {
+                                  //       return MakeScreen(
+                                  //         p: timeline[i],
+                                  //       );
+                                  //     },
+                                  //   ));
+                                  // await Navigator.of(context)
+                                  //     .push(MaterialPageRoute(
+                                  //   fullscreenDialog: true,
+                                  //   builder: (context) {
+                                  //     return Scaffold(
+                                  //       backgroundColor: Colors.transparent,
+                                  //       body: Container(
+                                  //         child: Center(
+                                  //           child: CachedNetworkImage(
+                                  //             imageUrl:
+                                  //                 timeline[i].purl[index],
+                                  //             placeholder: (context, url) {
+                                  //               return Center(
+                                  //                 child:
+                                  //                     CircularProgressIndicator(),
+                                  //               );
+                                  //             },
+                                  //             fit: BoxFit.contain,
+                                  //           ),
+                                  //         ),
+                                  //       ),
+                                  //     );
+                                  //   },
+                                  // ));
+                                  // },
+
                                   pagination: SwiperPagination.dots,
                                   // layout: SwiperLayout.STACK,
                                   // itemWidth: width,
                                   itemBuilder: (context, index) {
-                                    return CachedNetworkImage(
-                                      imageUrl: timeline[i].purl[index],
-                                      fit: BoxFit.contain,
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Center(
+                                        child: PinchZoomImage(
+                                          image: CachedNetworkImage(
+                                            imageUrl: timeline[i].purl[index],
+                                            fit: BoxFit.contain,
+                                          ),
+                                        ),
+                                      ),
                                     );
                                   },
                                   itemCount: timeline[i].purl.length,

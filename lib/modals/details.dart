@@ -24,6 +24,7 @@ giveGeocode(Map m, int precision) {
   var x = geoHasher.neighbors(geoHasher.encode(
       double.parse(m["longitude"]), double.parse(m["latitude"]),
       precision: precision));
+  // print(x);
   List<String> points = List();
   x.forEach((key, value) {
     points.add(value);

@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:together/design/styles.dart';
 import 'package:together/screens/registration.dart';
 import 'package:together/screens/homepage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'modals/details.dart';
 import 'modals/models.dart';
@@ -32,9 +35,27 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     pass = false;
     loading = false;
+    autoLogIn();
     userid = TextEditingController();
     password = TextEditingController();
     super.initState();
+  }
+
+  //!   ************************************************    Auto Login     *************************************
+
+  void autoLogIn() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var js = prefs.getString('js');
+
+    if (js != null) {
+      var x = json.decode(js);
+      Own own = Own.fromaMap(x);
+      own.show();
+      Navigator.pop(context);
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => HomePage(),
+      ));
+    }
   }
 
 //! ********************************************************  ToDo  Login Method   ********************************************************
@@ -175,7 +196,7 @@ class _MyAppState extends State<MyApp> {
                                       .collection("users")
                                       .where("userid", isEqualTo: userid.text)
                                       .getDocuments()
-                                      .then((value) {
+                                      .then((value) async {
                                     if (value.documents.length == 0) {
                                       print("Not Registered");
                                       setState(() {
@@ -192,11 +213,18 @@ class _MyAppState extends State<MyApp> {
                                         print(num);
                                         r.show();
                                         print("Yes");
-                                        Navigator.pop(context);
-                                        Navigator.of(context)
-                                            .push(MaterialPageRoute(
-                                          builder: (context) => HomePage(),
-                                        ));
+                                        final prefs = await SharedPreferences
+                                            .getInstance();
+
+                                        prefs.setString(
+                                            "js",
+                                            json.encode(
+                                                value.documents[0].data));
+                                        // Navigator.pop(context);
+                                        // Navigator.of(context)
+                                        //     .push(MaterialPageRoute(
+                                        //   builder: (context) => HomePage(),
+                                        // ));
                                       } else {
                                         print("Invalid Password");
                                         setState(() {
